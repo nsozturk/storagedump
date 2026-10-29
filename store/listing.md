@@ -4,35 +4,30 @@
 StorageDump
 
 ## Short Description (132 chars max)
-Inspect and export all browser storage for any site — cookies, localStorage, sessionStorage, IndexedDB, and more.
+See what a website keeps in your browser and save it to a file in one click. Runs locally; nothing leaves your device.
 
 ## Detailed Description
 
-**StorageDump** gives you a complete view of everything a website stores in your browser — cookies, localStorage, sessionStorage, IndexedDB, Cache API, and Web SQL — all in one place.
+StorageDump shows you, in one place, what the site in your current tab has saved in your browser: its cookies, local and session storage, IndexedDB databases, cached files and service workers. You can look through it, change or remove entries, and save a complete copy to a file.
 
-**Key Features**
+How it works
+Open the site, click the StorageDump icon and press Scan. You get a summary of what the site uses. Press Export all to save a ZIP or JSON file to your Downloads folder, or open the dashboard to browse each part in detail.
 
-• **One-click scan** — open the popup and instantly see every storage category detected for the active tab
-• **Badge** — after you scan, the extension icon shows how many storage categories the site is using
-• **Full export** — download all storage data as a structured ZIP or combined JSON with a single click
-• **Dashboard view** — drill into each category with a full-page inspector that shows raw keys and values
-• **Cookie support** — reads both standard and partitioned (CHIPS) cookies using Chrome's native cookies API
-• **Auto-refresh** — switches context automatically when you change tabs
+What you can do
+- Review a site's data in a full-page dashboard, down to individual database records.
+- Edit or delete entries to test how a site behaves with different data.
+- Save an exact copy: values are written as stored, and large exports are split automatically.
+- Include cookies that page scripts cannot see, such as HttpOnly cookies.
+- Hide values that look like passwords or tokens before you share an export.
+- Keep a short history of your exports with a checksum for each file.
 
-**Use Cases**
+Who it is for
+Web developers debugging their own apps, QA engineers capturing test state, and anyone checking what a site keeps after logging out or clearing consent.
 
-→ Debugging web apps and checking what data a site persists
-→ Security and privacy audits — see exactly what cookies and storage a site sets
-→ Data export for testing or migration
-→ Verifying that GDPR / cookie-consent flows actually clear storage
+Privacy
+StorageDump reads a site only when you press Scan or Export; nothing is read in the background. There is no server, no account and no analytics. Exported files go only to your Downloads folder. The source code is open (MIT) on GitHub.
 
-**Supported Storage Types**
-- Cookies (including partitioned / CHIPS)
-- localStorage
-- sessionStorage
-- IndexedDB
-- Cache API (Service Worker caches)
-- Web SQL
+> Rejected 2026-10-29 (Spam and Placement, "Yellow Argon") for listing the storage types repeatedly. Keep each storage type named once, in prose; no keyword lists.
 
 ---
 
