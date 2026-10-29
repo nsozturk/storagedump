@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>StorageVault - Data Explorer</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#3c83f6",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#101722",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"],
+                        "mono": ["JetBrains Mono"]
+                    },
+                    borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #334155;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display selection:bg-primary/30">
+<div class="flex h-screen w-full flex-col overflow-hidden">
+<!-- Top Navigation -->
+<header class="flex h-14 items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 px-4 shrink-0">
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2.5">
+<div class="flex h-8 w-8 items-center justify-center rounded bg-primary text-white">
+<span class="material-symbols-outlined">database</span>
+</div>
+<h1 class="text-sm font-bold tracking-tight uppercase">StorageVault</h1>
+</div>
+<nav class="flex items-center gap-1">
+<a class="px-3 py-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="#">Explorer</a>
+<a class="px-3 py-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="#">Queries</a>
+<a class="px-3 py-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="#">Network</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative group">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 material-symbols-outlined text-sm">search</span>
+<input class="h-8 w-64 rounded border-none bg-slate-100 dark:bg-slate-800 pl-9 text-xs focus:ring-1 focus:ring-primary dark:text-slate-200 placeholder:text-slate-500" placeholder="Filter stores or keys..." type="text"/>
+</div>
+<div class="flex items-center gap-1 border-l border-slate-200 dark:border-slate-800 pl-4">
+<button class="flex h-8 w-8 items-center justify-center rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-primary">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+</button>
+<div class="h-8 w-8 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden ring-1 ring-slate-200 dark:ring-slate-700">
+<img alt="User Profile" data-alt="User avatar profile picture circular icon" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDinTHXu6vgSac3witznvAlA09CMoXze2JYHoSfvA99LV2yUTyE_8MaZnd2onfPP88XheEnwEQImloWGTUPQBoSS1KRLC0ICuIdkxsqTBhkqJvNc3plf9rwBjZebbsXKaO2SQlwVEc-ziVBD4rWqfBRmnLCSeK-bBZhjNdyYcNWZO9aFOoCVWPW4IHMB3op1sBuo3TIOdvnV6s6LJj5ofDyZean-EjDyQUUwHqY1MgiLgnkC3b8lUCC_e1EAIRFwVjLOcXvvV_i9a2z"/>
+</div>
+</div>
+</div>
+</header>
+<main class="flex flex-1 overflow-hidden">
+<!-- Sidebar: Tree View -->
+<aside class="w-64 border-r border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/30 flex flex-col shrink-0">
+<div class="p-3">
+<div class="flex items-center justify-between mb-2 px-1">
+<span class="text-[10px] font-bold uppercase tracking-widest text-slate-500">Databases</span>
+<button class="text-slate-400 hover:text-primary">
+<span class="material-symbols-outlined text-[16px]">add</span>
+</button>
+</div>
+<div class="space-y-1">
+<!-- Database Item Expanded -->
+<div class="group">
+<div class="flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/50">
+<span class="material-symbols-outlined text-[18px]">arrow_drop_down</span>
+<span class="material-symbols-outlined text-[18px] text-primary">storage</span>
+<span class="text-xs font-medium text-slate-700 dark:text-slate-200">UserDB</span>
+</div>
+<!-- Object Stores Sub-list -->
+<div class="ml-6 mt-1 space-y-0.5 border-l border-slate-200 dark:border-slate-800">
+<a class="flex items-center gap-2 pl-4 py-1.5 text-xs font-medium text-primary bg-primary/10 border-r-2 border-primary" href="#">
+<span class="material-symbols-outlined text-[16px]">table_rows</span>
+                                    Profiles
+                                </a>
+<a class="flex items-center gap-2 pl-4 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-primary hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-colors" href="#">
+<span class="material-symbols-outlined text-[16px]">settings_input_component</span>
+                                    Settings
+                                </a>
+<a class="flex items-center gap-2 pl-4 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-primary hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-colors" href="#">
+<span class="material-symbols-outlined text-[16px]">key</span>
+                                    AuthTokens
+                                </a>
+</div>
+</div>
+<!-- Database Item Collapsed -->
+<div class="flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/50">
+<span class="material-symbols-outlined text-[18px]">arrow_right</span>
+<span class="material-symbols-outlined text-[18px]">inventory_2</span>
+<span class="text-xs font-medium text-slate-600 dark:text-slate-400">CacheDB</span>
+</div>
+<div class="flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/50">
+<span class="material-symbols-outlined text-[18px]">arrow_right</span>
+<span class="material-symbols-outlined text-[18px]">terminal</span>
+<span class="text-xs font-medium text-slate-600 dark:text-slate-400">LogDB</span>
+</div>
+</div>
+</div>
+<div class="mt-auto p-4 border-t border-slate-200 dark:border-slate-800">
+<button class="w-full flex items-center justify-center gap-2 rounded bg-primary py-2 text-xs font-bold text-white shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all">
+<span class="material-symbols-outlined text-[18px]">refresh</span>
+                        Refresh Database
+                    </button>
+</div>
+</aside>
+<!-- Main Panel -->
+<section class="flex flex-1 flex-col bg-white dark:bg-background-dark overflow-hidden">
+<!-- Breadcrumbs & Actions Header -->
+<div class="flex h-12 items-center justify-between border-b border-slate-200 dark:border-slate-800 px-4">
+<div class="flex items-center gap-2 text-xs">
+<span class="text-slate-500">Databases</span>
+<span class="material-symbols-outlined text-[14px] text-slate-400">chevron_right</span>
+<span class="text-slate-500">UserDB</span>
+<span class="material-symbols-outlined text-[14px] text-slate-400">chevron_right</span>
+<span class="font-semibold text-primary">Profiles</span>
+<span class="ml-2 rounded bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-[10px] font-mono text-slate-500">1,240 records</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-800 px-3 py-1.5 text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+<span class="material-symbols-outlined text-[16px]">upload_file</span>
+                            Export Store
+                        </button>
+<button class="flex items-center gap-1.5 rounded-lg bg-slate-900 dark:bg-slate-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800 transition-colors">
+<span class="material-symbols-outlined text-[16px]">add</span>
+                            Add Record
+                        </button>
+</div>
+</div>
+<!-- Table Content -->
+<div class="flex-1 overflow-auto custom-scrollbar @container">
+<table class="w-full border-collapse text-left text-xs">
+<thead class="sticky top-0 z-10 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm">
+<tr>
+<th class="w-10 px-4 py-2.5">
+<input class="rounded border-slate-300 dark:border-slate-700 bg-transparent text-primary focus:ring-primary" type="checkbox"/>
+</th>
+<th class="px-4 py-2.5 font-semibold text-slate-500 uppercase tracking-tight w-1/4">Key</th>
+<th class="px-4 py-2.5 font-semibold text-slate-500 uppercase tracking-tight w-1/3">Value</th>
+<th class="px-4 py-2.5 font-semibold text-slate-500 uppercase tracking-tight">Size</th>
+<th class="px-4 py-2.5 font-semibold text-slate-500 uppercase tracking-tight">Modified</th>
+<th class="px-4 py-2.5 font-semibold text-slate-500 uppercase tracking-tight text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100 dark:divide-slate-800/50">
+<!-- Row 1 -->
+<tr class="group hover:bg-primary/5 dark:hover:bg-primary/5 transition-colors">
+<td class="px-4 py-3">
+<input class="rounded border-slate-300 dark:border-slate-700 bg-transparent text-primary focus:ring-primary" type="checkbox"/>
+</td>
+<td class="px-4 py-3 font-mono text-primary font-medium">user_001</td>
+<td class="px-4 py-3 font-mono text-slate-500 dark:text-slate-400">
+<div class="truncate max-w-md">{ "id": "001", "name": "John Doe", "email": "j.doe@example.com", "active": true }</div>
+</td>
+<td class="px-4 py-3 text-slate-500">1.2 KB</td>
+<td class="px-4 py-3 text-slate-400 whitespace-nowrap">2023-10-27 14:20</td>
+<td class="px-4 py-3 text-right">
+<div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/10 rounded transition-all" title="Copy JSON">
+<span class="material-symbols-outlined text-[18px]">content_copy</span>
+</button>
+<button class="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded transition-all" title="Delete">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="group hover:bg-primary/5 dark:hover:bg-primary/5 transition-colors">
+<td class="px-4 py-3">
+<input class="rounded border-slate-300 dark:border-slate-700 bg-transparent text-primary focus:ring-primary" type="checkbox"/>
+</td>
+<td class="px-4 py-3 font-mono text-primary font-medium">user_002</td>
+<td class="px-4 py-3 font-mono text-slate-500 dark:text-slate-400">
+<div class="truncate max-w-md">{ "id": "002", "name": "Jane Smith", "email": "smith.j@corp.net", "roles": ["admin"] }</div>
+</td>
+<td class="px-4 py-3 text-slate-500">1.5 KB</td>
+<td class="px-4 py-3 text-slate-400 whitespace-nowrap">2023-10-27 14:22</td>
+<td class="px-4 py-3 text-right">
+<div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/10 rounded transition-all" title="Copy JSON">
+<span class="material-symbols-outlined text-[18px]">content_copy</span>
+</button>
+<button class="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded transition-all" title="Delete">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="group hover:bg-primary/5 dark:hover:bg-primary/5 transition-colors">
+<td class="px-4 py-3">
+<input class="rounded border-slate-300 dark:border-slate-700 bg-transparent text-primary focus:ring-primary" type="checkbox"/>
+</td>
+<td class="px-4 py-3 font-mono text-primary font-medium">user_003</td>
+<td class="px-4 py-3 font-mono text-slate-500 dark:text-slate-400">
+<div class="truncate max-w-md">{ "id": "003", "name": "Bob Johnson", "email": "bj@mail.io", "tier": "free" }</div>
+</td>
+<td class="px-4 py-3 text-slate-500">1.1 KB</td>
+<td class="px-4 py-3 text-slate-400 whitespace-nowrap">2023-10-27 15:05</td>
+<td class="px-4 py-3 text-right">
+<div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/10 rounded transition-all" title="Copy JSON">
+<span class="material-symbols-outlined text-[18px]">content_copy</span>
+</button>
+<button class="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded transition-all" title="Delete">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="group hover:bg-primary/5 dark:hover:bg-primary/5 transition-colors">
+<td class="px-4 py-3">
+<input class="rounded border-slate-300 dark:border-slate-700 bg-transparent text-primary focus:ring-primary" type="checkbox"/>
+</td>
+<td class="px-4 py-3 font-mono text-primary font-medium">user_004</td>
+<td class="px-4 py-3 font-mono text-slate-500 dark:text-slate-400">
+<div class="truncate max-w-md">{ "id": "004", "name": "Alice Williams", "metadata": { "last_login": "today" } }</div>
+</td>
+<td class="px-4 py-3 text-slate-500">2.0 KB</td>
+<td class="px-4 py-3 text-slate-400 whitespace-nowrap">2023-10-27 15:10</td>
+<td class="px-4 py-3 text-right">
+<div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/10 rounded transition-all" title="Copy JSON">
+<span class="material-symbols-outlined text-[18px]">content_copy</span>
+</button>
+<button class="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded transition-all" title="Delete">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 5 (Selected Example) -->
+<tr class="bg-primary/10 dark:bg-primary/20 border-l-2 border-primary">
+<td class="px-4 py-3">
+<input checked="" class="rounded border-slate-300 dark:border-slate-700 bg-transparent text-primary focus:ring-primary" type="checkbox"/>
+</td>
+<td class="px-4 py-3 font-mono text-primary font-bold">user_005</td>
+<td class="px-4 py-3 font-mono text-slate-700 dark:text-slate-200">
+<div class="truncate max-w-md">{ "id": "005", "name": "Charlie Brown", "status": "pending_verification" }</div>
+</td>
+<td class="px-4 py-3 text-slate-700 dark:text-slate-200">0.9 KB</td>
+<td class="px-4 py-3 text-slate-600 dark:text-slate-300 whitespace-nowrap">2023-10-28 09:12</td>
+<td class="px-4 py-3 text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="p-1.5 text-primary hover:bg-primary/10 rounded transition-all" title="Copy JSON">
+<span class="material-symbols-outlined text-[18px]">content_copy</span>
+</button>
+<button class="p-1.5 text-red-500 hover:bg-red-500/10 rounded transition-all" title="Delete">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Footer Stats -->
+<footer class="flex h-10 items-center justify-between border-t border-slate-200 dark:border-slate-800 px-4 bg-slate-50 dark:bg-slate-900/50 text-[11px] text-slate-500 uppercase font-medium tracking-wider">
+<div class="flex items-center gap-6">
+<span class="flex items-center gap-1.5"><span class="size-2 rounded-full bg-green-500"></span> Database Online</span>
+<span>IndexedDB v2.0</span>
+<span>Storage Quota: 8% used</span>
+</div>
+<div class="flex items-center gap-4">
+<span class="font-mono">Page 1 of 62</span>
+<div class="flex gap-1">
+<button class="p-1 hover:text-primary transition-colors disabled:text-slate-300 dark:disabled:text-slate-700" disabled="">
+<span class="material-symbols-outlined text-[16px]">chevron_left</span>
+</button>
+<button class="p-1 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+</div>
+</div>
+</footer>
+</section>
+</main>
+</div>
+</body></html>

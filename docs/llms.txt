@@ -1,0 +1,33 @@
+# StorageDump
+
+> StorageDump is a free, open-source Chrome extension that inspects and exports everything a website stores in your browser — cookies (including HttpOnly and partitioned), localStorage, sessionStorage, IndexedDB, Cache Storage and service workers — as lossless JSON or ZIP, entirely on your machine.
+
+Version 0.2.1, MIT license. On-demand only: no server, no analytics, no background reads. Exports are saved to the Downloads folder.
+
+## What it does
+
+- One panel for 7 storage types: cookies, localStorage, sessionStorage, IndexedDB, Cache Storage, Service Workers, extension storage.
+- Reads all frames, including cross-origin iframes.
+- IndexedDB drill-down preserving Map, Set, BigInt and cyclic values.
+- Cache bodies exported as text, or base64 for binary when "Skip binary bodies" is off.
+- JSON or ZIP export with manifest, large-file splitting and optional masking of sensitive values.
+- Edit/delete entries; export history with SHA-256 checksums.
+
+## Install
+
+- Chrome Web Store: https://chromewebstore.google.com/detail/storagedump/kihoghfekemdccfnpjefmggehpgnjnab
+- From source: `npm install`, `npm run build`, then load `dist/` unpacked at chrome://extensions (Developer mode).
+
+## Use
+
+Click the toolbar icon, press Scan, then Export all or Open dashboard.
+
+## Links
+
+- [Documentation](https://nsozturk.github.io/storagedump/): full docs portal with FAQ and alternatives
+- [Repository](https://github.com/nsozturk/storagedump): source code and README
+- [AGENTS.md](https://github.com/nsozturk/storagedump/blob/main/AGENTS.md): contract for coding agents
+- [Privacy](https://github.com/nsozturk/storagedump/blob/main/docs/privacy.md): what is stored and what leaves the browser
+- [Permissions](https://github.com/nsozturk/storagedump/blob/main/docs/permissions.md): why each permission is needed
+- [Releases](https://github.com/nsozturk/storagedump/releases): version history
+- [Website](https://storagedump.lamma.dev)

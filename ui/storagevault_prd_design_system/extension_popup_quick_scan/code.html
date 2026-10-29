@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#3c83f6",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#101722",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"],
+                        "mono": ["JetBrains Mono"]
+                    },
+                    borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            width: 400px;
+            height: 600px;
+            overflow: hidden;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 10px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display">
+<div class="flex h-full w-full flex-col">
+<!-- Header -->
+<header class="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-2xl">shield_lock</span>
+<div class="flex flex-col">
+<h1 class="text-sm font-bold tracking-tight">app.example.com</h1>
+<div class="flex items-center gap-1.5">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+</span>
+<span class="text-[10px] font-bold uppercase tracking-wider text-emerald-500">Live</span>
+</div>
+</div>
+</div>
+<button class="flex items-center justify-center p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
+<span class="material-symbols-outlined text-slate-500 dark:text-slate-400">settings</span>
+</button>
+</header>
+<!-- Main Content -->
+<main class="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
+<!-- Summary Card -->
+<div class="grid grid-cols-3 gap-2">
+<div class="col-span-3 bg-primary/10 border border-primary/20 rounded-xl p-4 flex flex-col items-center justify-center text-center">
+<span class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1">Total Payload</span>
+<span class="text-3xl font-bold font-mono text-primary">14.2<span class="text-lg ml-1">MB</span></span>
+</div>
+<div class="bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex flex-col items-center">
+<span class="text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase">Categories</span>
+<span class="text-xl font-bold font-mono">8</span>
+</div>
+<div class="col-span-2 bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex flex-col items-center">
+<span class="text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase">Total Items</span>
+<span class="text-xl font-bold font-mono">1,240</span>
+</div>
+</div>
+<!-- List Section -->
+<div class="space-y-2">
+<h2 class="text-[11px] font-bold text-slate-500 dark:text-slate-500 uppercase tracking-[0.2em] px-1">Storage Categories</h2>
+<!-- Local Storage -->
+<div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+<div class="flex items-center gap-3">
+<div class="flex items-center justify-center size-10 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+<span class="material-symbols-outlined text-xl">database</span>
+</div>
+<div>
+<p class="text-sm font-semibold">Local Storage</p>
+<p class="text-xs font-mono text-slate-500 dark:text-slate-400">42 Items | 12KB</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-emerald-500 text-xl">check_circle</span>
+</div>
+<!-- Session Storage -->
+<div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+<div class="flex items-center gap-3">
+<div class="flex items-center justify-center size-10 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+<span class="material-symbols-outlined text-xl">timer</span>
+</div>
+<div>
+<p class="text-sm font-semibold">Session Storage</p>
+<p class="text-xs font-mono text-slate-500 dark:text-slate-400">5 Items | 1KB</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-emerald-500 text-xl">check_circle</span>
+</div>
+<!-- Cookies -->
+<div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+<div class="flex items-center gap-3">
+<div class="flex items-center justify-center size-10 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+<span class="material-symbols-outlined text-xl">cookie</span>
+</div>
+<div>
+<p class="text-sm font-semibold">Cookies</p>
+<div class="flex items-center gap-2 mt-0.5">
+<span class="text-xs font-mono text-slate-500 dark:text-slate-400">128 Items</span>
+<span class="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500 text-[9px] font-bold uppercase tracking-tighter border border-amber-500/20">HttpOnly Restricted</span>
+</div>
+</div>
+</div>
+</div>
+<!-- IndexedDB -->
+<div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+<div class="flex items-center gap-3">
+<div class="flex items-center justify-center size-10 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+<span class="material-symbols-outlined text-xl">table_rows</span>
+</div>
+<div>
+<p class="text-sm font-semibold">IndexedDB</p>
+<p class="text-xs font-mono text-slate-500 dark:text-slate-400">3 Databases | 12.4 MB</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-emerald-500 text-xl">check_circle</span>
+</div>
+<!-- Cache Storage -->
+<div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+<div class="flex items-center gap-3">
+<div class="flex items-center justify-center size-10 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+<span class="material-symbols-outlined text-xl">cached</span>
+</div>
+<div>
+<p class="text-sm font-semibold">Cache Storage</p>
+<p class="text-xs font-mono text-slate-500 dark:text-slate-400">820 Entries | 1.8 MB</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-emerald-500 text-xl">check_circle</span>
+</div>
+<!-- Service Workers -->
+<div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+<div class="flex items-center gap-3">
+<div class="flex items-center justify-center size-10 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+<span class="material-symbols-outlined text-xl">engineering</span>
+</div>
+<div>
+<p class="text-sm font-semibold">Service Workers</p>
+<p class="text-xs font-mono text-slate-500 dark:text-slate-400">1 Active</p>
+</div>
+</div>
+<div class="flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex flex-col gap-3">
+<button class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all">
+<span class="material-symbols-outlined text-xl">download</span>
+<span>Export All</span>
+</button>
+<button class="text-xs text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary font-medium flex items-center justify-center gap-1 transition-colors">
+<span>Advanced Dashboard</span>
+<span class="material-symbols-outlined text-sm">open_in_new</span>
+</button>
+</footer>
+</div>
+</body></html>

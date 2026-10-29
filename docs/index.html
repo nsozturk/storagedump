@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StorageDump — Export Cookies, localStorage, IndexedDB &amp; Cache Storage from Chrome</title>
+
+  <meta name="description" content="StorageDump is a free, open-source Chrome extension that inspects and exports everything a website stores in your browser — cookies (including HttpOnly and partitioned), localStorage, sessionStorage, IndexedDB, Cache Storage and service workers — as lossless JSON or ZIP, entirely on your machine.">
+  <meta name="keywords" content="storagedump, chrome extension, export cookies, httponly cookies, localstorage, sessionstorage, indexeddb, cache storage, service workers, json export, zip export, editthiscookie alternative, cookie-editor alternative, get cookies.txt locally alternative">
+  <meta name="author" content="StorageDump">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://nsozturk.github.io/storagedump/">
+
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://nsozturk.github.io/storagedump/">
+  <meta property="og:title" content="StorageDump — Every byte a site stores, in one export">
+  <meta property="og:description" content="Free, open-source Chrome extension that exports cookies, localStorage, sessionStorage, IndexedDB, Cache Storage and service workers as lossless JSON or ZIP, entirely on your machine.">
+  <meta property="og:image" content="https://raw.githubusercontent.com/nsozturk/storagedump/main/assets/banner.png">
+  <meta property="og:site_name" content="StorageDump Documentation">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://nsozturk.github.io/storagedump/">
+  <meta name="twitter:title" content="StorageDump — Every byte a site stores, in one export">
+  <meta name="twitter:description" content="Export cookies (incl. HttpOnly), localStorage, sessionStorage, IndexedDB, Cache Storage and service workers as JSON or ZIP. Local-only, open source.">
+  <meta name="twitter:image" content="https://raw.githubusercontent.com/nsozturk/storagedump/main/assets/banner.png">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "StorageDump",
+    "softwareVersion": "0.2.1",
+    "operatingSystem": "Chrome",
+    "applicationCategory": "DeveloperApplication",
+    "description": "StorageDump is a free, open-source Chrome extension that inspects and exports everything a website stores in your browser — cookies (including HttpOnly and partitioned), localStorage, sessionStorage, IndexedDB, Cache Storage and service workers — as lossless JSON or ZIP, entirely on your machine.",
+    "url": "https://nsozturk.github.io/storagedump/",
+    "image": "https://raw.githubusercontent.com/nsozturk/storagedump/main/assets/banner.png",
+    "license": "https://opensource.org/licenses/MIT",
+    "codeRepository": "https://github.com/nsozturk/storagedump",
+    "downloadUrl": "https://chromewebstore.google.com/detail/storagedump/kihoghfekemdccfnpjefmggehpgnjnab",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I export all cookies including HttpOnly ones from Chrome?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Install StorageDump, open the site, click the toolbar icon, press Scan, then Export all. Cookies are read through the Chrome cookies API, so HttpOnly and partitioned cookies are included in the JSON or ZIP export." }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I export localStorage and IndexedDB for a site?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Click the StorageDump toolbar icon on the site, press Scan, then Export all (or open the dashboard to pick individual stores). localStorage, sessionStorage and IndexedDB, including Map, Set, BigInt and cyclic values, are written to a lossless JSON or ZIP file in your Downloads folder." }
+      },
+      {
+        "@type": "Question",
+        "name": "Does StorageDump send my data anywhere?",
+        "acceptedAnswer": { "@type": "Answer", "text": "No. StorageDump reads storage only when you click, has no server, no analytics and no background reads. Exports are saved to your Downloads folder and never leave your machine unless you share them." }
+      },
+      {
+        "@type": "Question",
+        "name": "Is StorageDump an alternative to EditThisCookie or Get cookies.txt LOCALLY?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes, for inspecting and exporting browser data. StorageDump covers cookies like those tools do, and also localStorage, sessionStorage, IndexedDB, Cache Storage, service workers and extension storage in one panel." }
+      },
+      {
+        "@type": "Question",
+        "name": "Why does StorageDump need access to all sites?",
+        "acceptedAnswer": { "@type": "Answer", "text": "To read the storage and cookies of whichever site you choose to inspect, Chrome requires a host permission. StorageDump declares <all_urls> but only acts on the tab you click it on, on demand." }
+      }
+    ]
+  }
+  </script>
+
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: #0f172a;
+      --sidebar-bg: #0b1120;
+      --border: #1e293b;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --accent: #3B82F6;
+      --accent-soft: #60A5FA;
+      --accent-glow: rgba(59, 130, 246, 0.16);
+      --code-bg: #030712;
+      --sidebar-width: 270px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.65; overflow-x: hidden;
+    }
+    a { color: var(--accent-soft); }
+    header.navbar {
+      position: sticky; top: 0; z-index: 50; height: 64px;
+      background: rgba(9, 13, 22, 0.88); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; padding: 0 24px;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 1.2rem; color: #fff; text-decoration: none; }
+    .brand .badge {
+      background: var(--accent-glow); color: var(--accent-soft); border: 1px solid var(--accent);
+      font-size: 0.72rem; padding: 2px 8px; border-radius: 9999px; font-weight: 600;
+    }
+    .nav-actions { display: flex; align-items: center; gap: 16px; }
+    .nav-link { color: var(--text-muted); text-decoration: none; font-weight: 500; font-size: 0.9rem; }
+    .nav-link:hover { color: #fff; }
+    .btn-github {
+      background: #1e293b; color: #fff; padding: 6px 14px; border-radius: 8px; text-decoration: none;
+      font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 6px; border: 1px solid #334155;
+    }
+    .btn-github:hover { background: #334155; }
+    .container { display: flex; max-width: 1440px; margin: 0 auto; }
+    aside.sidebar {
+      width: var(--sidebar-width); flex: 0 0 var(--sidebar-width); position: sticky; top: 64px; height: calc(100vh - 64px);
+      background: var(--sidebar-bg); border-right: 1px solid var(--border); padding: 24px 16px; overflow-y: auto;
+    }
+    .search-box { margin-bottom: 20px; }
+    .search-box input {
+      width: 100%; background: #1e293b; border: 1px solid #334155; border-radius: 8px;
+      padding: 8px 12px; color: #fff; font-size: 0.85rem; outline: none;
+    }
+    .search-box input:focus { border-color: var(--accent); }
+    .nav-menu-item {
+      display: block; padding: 7px 12px; color: var(--text-muted); text-decoration: none;
+      font-size: 0.9rem; font-weight: 500; border-radius: 6px; margin-bottom: 2px; border-left: 3px solid transparent;
+    }
+    .nav-menu-item:hover, .nav-menu-item.active { color: #fff; background: var(--accent-glow); border-left-color: var(--accent); }
+    .no-results { display: none; color: var(--text-muted); font-size: 0.85rem; padding: 8px 12px; }
+    main.content { flex: 1; min-width: 0; padding: 40px 56px; max-width: 960px; }
+    .banner-hero { width: 100%; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 32px; overflow: hidden; }
+    .banner-hero img { width: 100%; height: auto; display: block; }
+    h1 { font-size: 2.3rem; font-weight: 800; margin-bottom: 12px; letter-spacing: -0.02em; line-height: 1.2; }
+    h2 { font-size: 1.6rem; font-weight: 700; margin: 8px 0 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+    h3 { font-size: 1.1rem; font-weight: 600; margin: 22px 0 8px; }
+    section { margin-bottom: 44px; }
+    p, li { color: #cbd5e1; }
+    p { margin-bottom: 14px; }
+    ul, ol { margin: 0 0 14px 22px; }
+    li { margin-bottom: 6px; }
+    pre {
+      background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px;
+      padding: 16px; overflow-x: auto; margin: 14px 0 22px; position: relative;
+    }
+    code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 0.87rem; }
+    p code, li code, td code { background: #1e293b; color: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 0.84rem; }
+    .copy-btn {
+      position: absolute; top: 8px; right: 8px; background: #1e293b; color: var(--text-muted);
+      border: 1px solid #334155; padding: 3px 8px; border-radius: 6px; font-size: 0.72rem; cursor: pointer;
+    }
+    .copy-btn:hover { color: #fff; background: #334155; }
+    .table-wrap { overflow-x: auto; margin: 16px 0 24px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid var(--border); padding: 9px 13px; text-align: left; font-size: 0.9rem; vertical-align: top; }
+    th { background: var(--card-bg); color: #fff; font-weight: 600; }
+    td { color: #cbd5e1; }
+    .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin: 20px 0; }
+    .feature-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
+    .feature-card h3 { margin: 0 0 6px; font-size: 1rem; color: #fff; }
+    .feature-card p { font-size: 0.88rem; margin: 0; color: var(--text-muted); }
+    .cta { display: inline-block; background: var(--accent); color: #fff; padding: 10px 18px; border-radius: 8px; font-weight: 600; text-decoration: none; margin: 4px 8px 12px 0; }
+    .cta.alt { background: #1e293b; border: 1px solid #334155; }
+    details { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin-bottom: 10px; }
+    summary { cursor: pointer; font-weight: 600; color: #fff; }
+    details p { margin: 10px 0 0; }
+    footer { margin-top: 56px; padding-top: 22px; border-top: 1px solid var(--border); font-size: 0.85rem; color: var(--text-muted); text-align: center; }
+    @media (max-width: 900px) {
+      aside.sidebar { display: none; }
+      main.content { padding: 24px 18px; }
+      h1 { font-size: 1.8rem; }
+      .nav-link { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="navbar">
+    <a href="#overview" class="brand">StorageDump <span class="badge">v0.2.1</span></a>
+    <div class="nav-actions">
+      <a href="#install" class="nav-link">Install</a>
+      <a href="#usage" class="nav-link">Usage</a>
+      <a href="#faq" class="nav-link">FAQ</a>
+      <a href="https://github.com/nsozturk/storagedump" target="_blank" rel="noopener" class="btn-github">
+        <svg height="16" width="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+    </div>
+  </header>
+
+  <div class="container">
+    <aside class="sidebar">
+      <div class="search-box">
+        <input type="search" id="docSearch" placeholder="Search documentation..." aria-label="Search documentation">
+      </div>
+      <nav id="sideNav">
+        <a href="#overview" class="nav-menu-item active">Overview</a>
+        <a href="#install" class="nav-menu-item">Install</a>
+        <a href="#usage" class="nav-menu-item">Usage</a>
+        <a href="#features" class="nav-menu-item">Features</a>
+        <a href="#privacy" class="nav-menu-item">Privacy &amp; Permissions</a>
+        <a href="#development" class="nav-menu-item">Development &amp; Testing</a>
+        <a href="#faq" class="nav-menu-item">FAQ</a>
+        <a href="#alternatives" class="nav-menu-item">Alternatives</a>
+        <div class="no-results" id="noResults">No matching sections.</div>
+      </nav>
+    </aside>
+
+    <main class="content">
+      <div class="banner-hero">
+        <img src="assets/banner.png" onerror="this.src='../assets/banner.png'" alt="StorageDump — Every byte a site stores, in one export" width="1280" height="360">
+      </div>
+
+      <section id="overview" data-nav>
+        <h1>StorageDump</h1>
+        <p><strong>StorageDump is a free, open-source Chrome extension that inspects and exports everything a website stores in your browser — cookies (including HttpOnly and partitioned), localStorage, sessionStorage, IndexedDB, Cache Storage and service workers — as lossless JSON or ZIP, entirely on your machine.</strong></p>
+        <p>Version 0.2.1 &middot; MIT licensed &middot; Manifest V3.</p>
+        <a class="cta" href="https://chromewebstore.google.com/detail/storagedump/kihoghfekemdccfnpjefmggehpgnjnab" target="_blank" rel="noopener">Add to Chrome</a>
+        <a class="cta alt" href="https://github.com/nsozturk/storagedump" target="_blank" rel="noopener">View on GitHub</a>
+        <a class="cta alt" href="https://storagedump.lamma.dev" target="_blank" rel="noopener">Website</a>
+      </section>
+
+      <section id="install" data-nav>
+        <h2>Install</h2>
+        <h3>Chrome Web Store</h3>
+        <p>Install from the <a href="https://chromewebstore.google.com/detail/storagedump/kihoghfekemdccfnpjefmggehpgnjnab" target="_blank" rel="noopener">Chrome Web Store listing</a>.</p>
+        <h3>From source</h3>
+        <pre><button class="copy-btn" type="button">Copy</button><code>git clone https://github.com/nsozturk/storagedump.git
+cd storagedump
+npm install
+npm run build</code></pre>
+        <p>Then open <code>chrome://extensions</code>, enable <strong>Developer mode</strong>, click <strong>Load unpacked</strong> and select the generated <code>dist/</code> folder.</p>
+      </section>
+
+      <section id="usage" data-nav>
+        <h2>Usage</h2>
+        <ol>
+          <li>Open the site you want to inspect.</li>
+          <li>Click the StorageDump toolbar icon.</li>
+          <li>Press <strong>Scan</strong>. Every storage type found is listed with counts.</li>
+          <li>Press <strong>Export all</strong> for a JSON or ZIP file in your Downloads folder, or <strong>Open dashboard</strong> to browse, filter, edit and export selectively.</li>
+        </ol>
+      </section>
+
+      <section id="features" data-nav>
+        <h2>Features</h2>
+        <div class="feature-grid">
+          <div class="feature-card"><h3>One panel, 7 storage types</h3><p>Cookies, localStorage, sessionStorage, IndexedDB, Cache Storage, Service Workers and extension storage.</p></div>
+          <div class="feature-card"><h3>All frames</h3><p>Reads every frame of the page, including cross-origin iframes.</p></div>
+          <div class="feature-card"><h3>IndexedDB drill-down</h3><p>Browse databases, stores and records; Map, Set, BigInt and cyclic values are preserved.</p></div>
+          <div class="feature-card"><h3>Cache bodies</h3><p>Text bodies are exported as text; binary bodies as base64 when "Skip binary bodies" is off.</p></div>
+          <div class="feature-card"><h3>JSON or ZIP export</h3><p>ZIP includes a manifest, splits large files, and can optionally mask sensitive values.</p></div>
+          <div class="feature-card"><h3>Mutation console</h3><p>Edit or delete individual entries directly from the dashboard.</p></div>
+          <div class="feature-card"><h3>Export history</h3><p>Every export is logged with a SHA-256 checksum so you can verify files later.</p></div>
+          <div class="feature-card"><h3>On-demand only</h3><p>Nothing is read in the background. No server, no analytics. Files go to Downloads.</p></div>
+        </div>
+      </section>
+
+      <section id="privacy" data-nav>
+        <h2>Privacy &amp; Permissions</h2>
+        <p>StorageDump runs entirely inside your browser. It reads site storage only when you click, has no server and no analytics, and writes exports to your Downloads folder. See <a href="https://github.com/nsozturk/storagedump/blob/main/docs/privacy.md" target="_blank" rel="noopener">docs/privacy.md</a> and <a href="https://github.com/nsozturk/storagedump/blob/main/docs/permissions.md" target="_blank" rel="noopener">docs/permissions.md</a> on GitHub.</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Permission</th><th>Why it is needed</th></tr></thead>
+          <tbody>
+            <tr><td><code>activeTab</code></td><td>Scope actions to the tab you click on.</td></tr>
+            <tr><td><code>scripting</code></td><td>Inject the page runtime on demand to read web storage.</td></tr>
+            <tr><td><code>storage</code></td><td>Persist settings and export history metadata.</td></tr>
+            <tr><td><code>downloads</code></td><td>Save JSON and ZIP exports to Downloads.</td></tr>
+            <tr><td><code>tabs</code></td><td>Resolve the active tab and open the dashboard.</td></tr>
+            <tr><td><code>cookies</code></td><td>Read and edit cookies, including HttpOnly and partitioned ones.</td></tr>
+            <tr><td><code>&lt;all_urls&gt;</code> (host)</td><td>Needed to read the storage and cookies of whatever site you inspect. Used only when you click.</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <section id="development" data-nav>
+        <h2>Development &amp; Testing</h2>
+        <pre><button class="copy-btn" type="button">Copy</button><code>npm run typecheck   # TypeScript checks
+npm test            # unit tests (vitest)
+npx playwright install chromium   # once, for e2e
+npm run test:e2e    # builds and runs the 29-case Playwright dashboard test
+npm run pack        # build the Chrome Web Store zip</code></pre>
+        <p>The e2e suite includes layout-stability checks for the dashboard.</p>
+      </section>
+
+      <section id="faq" data-nav>
+        <h2>FAQ</h2>
+        <details><summary>How do I export all cookies including HttpOnly ones from Chrome?</summary>
+          <p>Install StorageDump, open the site, click the toolbar icon, press <strong>Scan</strong>, then <strong>Export all</strong>. Cookies are read through the Chrome cookies API, so HttpOnly and partitioned cookies are included in the JSON or ZIP export.</p></details>
+        <details><summary>How do I export localStorage and IndexedDB for a site?</summary>
+          <p>Click the toolbar icon on the site, press <strong>Scan</strong>, then <strong>Export all</strong> (or open the dashboard to pick individual stores). localStorage, sessionStorage and IndexedDB, including Map, Set, BigInt and cyclic values, are written to a lossless JSON or ZIP file in your Downloads folder.</p></details>
+        <details><summary>Does StorageDump send my data anywhere?</summary>
+          <p>No. It reads storage only when you click, has no server, no analytics and no background reads. Exports stay on your machine unless you share them.</p></details>
+        <details><summary>Is StorageDump an alternative to EditThisCookie or Get cookies.txt LOCALLY?</summary>
+          <p>Yes, for inspecting and exporting browser data. StorageDump covers cookies like those tools do, and also localStorage, sessionStorage, IndexedDB, Cache Storage, service workers and extension storage in one panel.</p></details>
+        <details><summary>Why does StorageDump need access to all sites?</summary>
+          <p>To read the storage and cookies of whichever site you choose to inspect, Chrome requires a host permission. StorageDump declares <code>&lt;all_urls&gt;</code> but only acts on the tab you click it on, on demand.</p></details>
+      </section>
+
+      <section id="alternatives" data-nav>
+        <h2>Alternatives</h2>
+        <p>StorageDump is one option among several tools for inspecting browser data. Factual comparison, no endorsement implied:</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Tool</th><th>Focus</th></tr></thead>
+          <tbody>
+            <tr><td>EditThisCookie</td><td>Viewing and editing cookies.</td></tr>
+            <tr><td>Cookie-Editor</td><td>Viewing, editing and exporting cookies.</td></tr>
+            <tr><td>Get cookies.txt LOCALLY</td><td>Exporting cookies in Netscape <code>cookies.txt</code> format.</td></tr>
+            <tr><td>Chrome DevTools Application panel</td><td>Built-in inspection of storage per site; no bulk lossless export.</td></tr>
+            <tr><td>StorageDump</td><td>Cookies plus localStorage, sessionStorage, IndexedDB, Cache Storage, service workers and extension storage, exported as JSON or ZIP.</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <footer>
+        <p>MIT License &middot; <a href="https://github.com/nsozturk/storagedump">GitHub</a> &middot; <a href="https://storagedump.lamma.dev">storagedump.lamma.dev</a> &middot; Support: support@lamma.dev</p>
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    document.querySelectorAll('pre .copy-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var text = btn.nextElementSibling.innerText;
+        navigator.clipboard.writeText(text).then(function () {
+          btn.textContent = 'Copied!';
+          setTimeout(function () { btn.textContent = 'Copy'; }, 1800);
+        });
+      });
+    });
+
+    var input = document.getElementById('docSearch');
+    var sections = Array.prototype.slice.call(document.querySelectorAll('main section[data-nav]'));
+    var links = Array.prototype.slice.call(document.querySelectorAll('#sideNav .nav-menu-item'));
+    var noResults = document.getElementById('noResults');
+    input.addEventListener('input', function () {
+      var q = input.value.trim().toLowerCase(), shown = 0;
+      sections.forEach(function (sec, i) {
+        var hit = !q || sec.innerText.toLowerCase().indexOf(q) !== -1;
+        sec.style.display = hit ? '' : 'none';
+        links[i].style.display = hit ? '' : 'none';
+        if (hit) shown++;
+      });
+      noResults.style.display = shown ? 'none' : 'block';
+    });
+
+    if ('IntersectionObserver' in window) {
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) {
+            links.forEach(function (a) { a.classList.toggle('active', a.getAttribute('href') === '#' + e.target.id); });
+          }
+        });
+      }, { rootMargin: '-20% 0px -70% 0px' });
+      sections.forEach(function (s) { io.observe(s); });
+    }
+  </script>
+</body>
+</html>

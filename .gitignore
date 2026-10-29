@@ -1,0 +1,17 @@
+.DS_Store
+node_modules/
+dist/
+tmp-smoke-artifacts/
+tsconfig.tsbuildinfo
+__pycache__/
+*.pyc
+# CWS package output
+storagedump*.zip
+# Reference / research extension directories
+*-Chrome-Web-Store/
+# Dev scripts
+scripts/probe_real_site.py
+# Local agent/tooling state
+.claude/
+.factory/
+checkpoints/

@@ -1,0 +1,30 @@
+# StorageVault: Technical Product Requirements Document
+
+## 1. Product Vision
+StorageVault is a high-fidelity browser utility designed for technical users (Devs, QA, Security) to inspect, manage, and export all client-side data. It replaces the fragmented experience of DevTools with a unified, export-ready interface.
+
+## 2. Core Personas
+- **The Developer:** Needs to dump IndexedDB state to debug a local sync issue.
+- **The Security Researcher:** Needs to audit cookies and service worker cache for sensitive data leaks.
+- **The QA Engineer:** Needs to capture a full site state (LocalStorage + SessionStorage) to attach to a bug report.
+
+## 3. Key Features & Workflows
+- **Deep Scanning:** Recursive discovery of LocalStorage, SessionStorage, Cookies, IndexedDB, Cache API, and Service Workers.
+- **Selective Export:** Granular control over which categories and specific keys are included.
+- **Advanced Dashboard:** A full-tab experience for tree-based data exploration and bulk management.
+- **Privacy First:** 100% local processing; clear indicators that no data leaves the browser context.
+
+## 4. Visual Language
+- **Aesthetic:** "DevTools Premium" — High density, high contrast, monospace for data.
+- **Color Palette:** 
+  - Backgrounds: Slate 900/950
+  - Surface: Slate 800
+  - Primary: Blue 500 (Action)
+  - Success: Emerald 500
+  - Warning: Amber 500
+- **Typography:** Inter for UI, JetBrains Mono for data strings.
+
+## 5. Information Architecture
+- **Popup:** Quick status and "Export All" capability.
+- **Dashboard:** Navigation sidebar with category-specific views and a central inspection table.
+- **Settings:** Permissions management and export formatting options.

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StorageDump — Privacy Policy</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 16px; line-height: 1.7;
+      color: #1e293b; background: #f8fafc;
+      padding: 40px 20px;
+    }
+    .page { max-width: 720px; margin: 0 auto; background: #fff;
+      border-radius: 12px; padding: 48px 56px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+    h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 8px; color: #0f172a; }
+    .meta { color: #64748b; font-size: .9rem; margin-bottom: 40px; }
+    h2 { font-size: 1.1rem; font-weight: 600; margin: 32px 0 10px; color: #0f172a; }
+    p { margin-bottom: 14px; }
+    ul { padding-left: 24px; margin-bottom: 14px; }
+    li { margin-bottom: 6px; }
+    a { color: #2563eb; }
+    @media (max-width: 640px) { .page { padding: 32px 24px; } }
+  </style>
+</head>
+<body>
+<div class="page">
+  <h1>Privacy Policy</h1>
+  <p class="meta">StorageDump Chrome Extension &nbsp;·&nbsp; Last updated: March 2025</p>
+
+  <h2>Overview</h2>
+  <p>
+    StorageDump is a developer tool that reads and displays browser storage data
+    (cookies, localStorage, sessionStorage, IndexedDB, Cache API) for the tab you are
+    currently viewing. This privacy policy explains what data the extension accesses
+    and what it does — and does not — do with that data.
+  </p>
+
+  <h2>Data Collection</h2>
+  <p><strong>StorageDump does not collect, transmit, or store any data on external servers.</strong></p>
+  <p>All data processed by StorageDump stays entirely on your device:</p>
+  <ul>
+    <li>Storage data (cookies, localStorage, etc.) is read directly from your browser and displayed in the extension popup or dashboard.</li>
+    <li>When you use the Export feature, data is saved as a file on your local computer only.</li>
+    <li>No data is uploaded to any server, cloud service, or third party.</li>
+    <li>No analytics, telemetry, or crash-reporting libraries are included.</li>
+  </ul>
+
+  <h2>Permissions Used</h2>
+  <ul>
+    <li><strong>cookies + &lt;all_urls&gt;</strong> — to read cookies for any site you visit, on demand.</li>
+    <li><strong>scripting</strong> — to inject a script that reads localStorage, sessionStorage, IndexedDB, and Cache API from the page context.</li>
+    <li><strong>tabs</strong> — to identify the active tab and to clear its badge counter when the tab navigates.</li>
+    <li><strong>storage</strong> — to save your preferences (export format, etc.) locally via <code>chrome.storage.sync</code>.</li>
+    <li><strong>downloads</strong> — to save exported files to your computer.</li>
+  </ul>
+  <p>
+    StorageDump only reads storage data when you actively open the popup, open the dashboard,
+    or trigger an export. It does not run persistent background jobs that monitor your browsing.
+  </p>
+
+  <h2>Data Sharing</h2>
+  <p>StorageDump does not share any data with third parties. There are no advertising networks,
+  analytics providers, or data brokers involved.</p>
+
+  <h2>Local Preferences</h2>
+  <p>
+    Your extension preferences (chosen export format, auto-scan setting) are saved via
+    <code>chrome.storage.sync</code>, which stores them in your Chrome profile. If you are
+    signed in to Chrome, these preferences may sync across your devices via Google's sync
+    infrastructure, subject to Google's privacy policy. StorageDump has no control over
+    this sync behavior.
+  </p>
+
+  <h2>Open Source</h2>
+  <p>
+    StorageDump's source code is available for review. You can inspect exactly what the
+    extension does at any time.
+  </p>
+
+  <h2>Changes to This Policy</h2>
+  <p>
+    If this policy is updated, the "Last updated" date at the top of this page will change.
+    Continued use of the extension after any changes constitutes acceptance of the updated policy.
+  </p>
+
+  <h2>Contact</h2>
+  <p>
+    If you have questions about this privacy policy or the extension's data practices,
+    please open an issue in the project repository.
+  </p>
+</div>
+</body>
+</html>

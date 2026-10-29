@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "StorageDump",
+  "description": "Inspect and export cookies, localStorage, sessionStorage, IndexedDB and Cache API for any site you visit.",
+  "version": "0.2.1",
+  "minimum_chrome_version": "120",
+  "action": {
+    "default_title": "StorageDump",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png"
+    }
+  },
+  "background": {
+    "service_worker": "assets/background.js",
+    "type": "module"
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "options_page": "options.html",
+  "permissions": ["activeTab", "scripting", "storage", "downloads", "tabs", "cookies"],
+  "host_permissions": ["<all_urls>"],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "assets/inpage.js",
+        "assets/constants.js",
+        "assets/serialization.js"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

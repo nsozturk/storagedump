@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>StorageVault - Advanced Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#3c83f6",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#101722",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #282e39;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display min-h-screen">
+<div class="flex h-screen overflow-hidden">
+<!-- Sidebar -->
+<aside class="w-64 flex-shrink-0 border-r border-slate-200 dark:border-slate-800 bg-background-light dark:bg-background-dark flex flex-col">
+<div class="p-6 flex flex-col">
+<div class="flex items-center gap-2 text-primary mb-1">
+<span class="material-symbols-outlined text-3xl font-bold">database</span>
+<h1 class="text-lg font-black tracking-tight dark:text-slate-100 uppercase">StorageVault</h1>
+</div>
+<p class="text-slate-500 dark:text-slate-400 text-xs font-mono">v2.4.0-stable</p>
+</div>
+<nav class="flex-1 px-4 py-2 space-y-1 overflow-y-auto custom-scrollbar">
+<div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3 mb-2">Categories</div>
+<a class="flex items-center gap-3 px-3 py-2 rounded bg-primary/10 text-primary group" href="#">
+<span class="material-symbols-outlined text-xl">dashboard</span>
+<span class="text-sm font-semibold">Overview</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined text-xl">storage</span>
+<span class="text-sm font-medium">Local Storage</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined text-xl">schedule</span>
+<span class="text-sm font-medium">Session Storage</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined text-xl">cookie</span>
+<span class="text-sm font-medium">Cookies</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined text-xl">table_chart</span>
+<span class="text-sm font-medium">IndexedDB</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined text-xl">content_cut</span>
+<span class="text-sm font-medium">Cache Storage</span>
+</a>
+<div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3 mt-8 mb-2">Activity</div>
+<a class="flex items-center gap-3 px-3 py-2 rounded text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined text-xl">history</span>
+<span class="text-sm font-medium">Export History</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined text-xl">analytics</span>
+<span class="text-sm font-medium">Network Usage</span>
+</a>
+<div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3 mt-8 mb-2">Settings</div>
+<a class="flex items-center gap-3 px-3 py-2 rounded text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined text-xl">settings</span>
+<span class="text-sm font-medium">Configuration</span>
+</a>
+</nav>
+<div class="p-4 border-t border-slate-200 dark:border-slate-800">
+<button class="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white py-2.5 rounded-lg text-sm font-bold transition-all shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined text-lg">backup</span>
+<span>Prepare Full Backup (ZIP)</span>
+</button>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col overflow-hidden bg-slate-50 dark:bg-background-dark">
+<!-- Top Bar -->
+<header class="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-background-dark flex items-center justify-between px-8 z-10">
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">public</span>
+<span class="text-sm font-bold dark:text-slate-100">app.example.com</span>
+</div>
+<div class="h-4 w-px bg-slate-200 dark:border-slate-700"></div>
+<div class="flex items-center gap-2 text-xs font-semibold text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded">
+<span class="material-symbols-outlined text-sm leading-none">lock_open</span>
+<span>Permissions: Granted</span>
+</div>
+</div>
+<div class="flex items-center gap-4 flex-1 max-w-xl justify-end">
+<div class="relative w-full max-w-sm">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
+<input class="w-full pl-10 pr-4 py-1.5 bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm focus:ring-2 focus:ring-primary text-slate-100 placeholder:text-slate-500" placeholder="Search storage keys, cookies, or domains..." type="text"/>
+</div>
+<button class="p-2 text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs border border-primary/30">
+                        JD
+                    </div>
+</div>
+</header>
+<!-- Scrollable Area -->
+<div class="flex-1 overflow-y-auto p-8 custom-scrollbar">
+<!-- Header Section -->
+<div class="mb-8">
+<h2 class="text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight mb-2">
+                        StorageVault Dashboard: <span class="text-primary">app.example.com</span>
+</h2>
+<p class="text-slate-500 dark:text-slate-400 flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">info</span>
+                        Real-time storage monitoring and developer diagnostic tools for the current environment.
+                    </p>
+</div>
+<!-- Metrics Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+<!-- Local Storage Card -->
+<div class="bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 p-5 rounded-xl">
+<div class="flex justify-between items-start mb-4">
+<div>
+<p class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Local Storage</p>
+<h3 class="text-2xl font-black dark:text-slate-100">1.24 MB</h3>
+</div>
+<span class="text-emerald-500 text-xs font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded">+2.4%</span>
+</div>
+<div class="h-12 w-full flex items-end gap-1">
+<div class="bg-primary/40 h-1/3 flex-1 rounded-sm"></div>
+<div class="bg-primary/40 h-2/3 flex-1 rounded-sm"></div>
+<div class="bg-primary h-full flex-1 rounded-sm"></div>
+<div class="bg-primary/40 h-1/2 flex-1 rounded-sm"></div>
+<div class="bg-primary/40 h-3/4 flex-1 rounded-sm"></div>
+<div class="bg-primary/60 h-2/3 flex-1 rounded-sm"></div>
+<div class="bg-primary h-5/6 flex-1 rounded-sm"></div>
+</div>
+</div>
+<!-- Session Storage Card -->
+<div class="bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 p-5 rounded-xl">
+<div class="flex justify-between items-start mb-4">
+<div>
+<p class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Session Data</p>
+<h3 class="text-2xl font-black dark:text-slate-100">450 KB</h3>
+</div>
+<span class="text-rose-500 text-xs font-bold bg-rose-500/10 px-1.5 py-0.5 rounded">-12%</span>
+</div>
+<div class="h-12 w-full flex items-end gap-1">
+<div class="bg-primary/30 h-full flex-1 rounded-sm"></div>
+<div class="bg-primary/30 h-5/6 flex-1 rounded-sm"></div>
+<div class="bg-primary/30 h-4/6 flex-1 rounded-sm"></div>
+<div class="bg-primary/30 h-1/2 flex-1 rounded-sm"></div>
+<div class="bg-primary/30 h-1/3 flex-1 rounded-sm"></div>
+<div class="bg-primary/30 h-1/4 flex-1 rounded-sm"></div>
+<div class="bg-primary/30 h-1/6 flex-1 rounded-sm"></div>
+</div>
+</div>
+<!-- Cookies Card -->
+<div class="bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 p-5 rounded-xl">
+<div class="flex justify-between items-start mb-4">
+<div>
+<p class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Cookies</p>
+<h3 class="text-2xl font-black dark:text-slate-100">32 Items</h3>
+</div>
+<span class="text-slate-500 text-xs font-bold bg-slate-500/10 px-1.5 py-0.5 rounded">STABLE</span>
+</div>
+<div class="h-12 w-full flex items-end gap-1">
+<div class="bg-primary h-1/2 flex-1 rounded-sm"></div>
+<div class="bg-primary h-1/2 flex-1 rounded-sm"></div>
+<div class="bg-primary h-1/2 flex-1 rounded-sm"></div>
+<div class="bg-primary h-1/2 flex-1 rounded-sm"></div>
+<div class="bg-primary h-1/2 flex-1 rounded-sm"></div>
+<div class="bg-primary h-1/2 flex-1 rounded-sm"></div>
+<div class="bg-primary h-1/2 flex-1 rounded-sm"></div>
+</div>
+</div>
+<!-- IndexedDB Card -->
+<div class="bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 p-5 rounded-xl">
+<div class="flex justify-between items-start mb-4">
+<div>
+<p class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">IndexedDB</p>
+<h3 class="text-2xl font-black dark:text-slate-100">14.5 MB</h3>
+</div>
+<span class="text-amber-500 text-xs font-bold bg-amber-500/10 px-1.5 py-0.5 rounded">LARGE</span>
+</div>
+<div class="h-12 w-full flex items-end gap-1">
+<div class="bg-primary/20 h-1/4 flex-1 rounded-sm"></div>
+<div class="bg-primary/30 h-1/3 flex-1 rounded-sm"></div>
+<div class="bg-primary/40 h-1/2 flex-1 rounded-sm"></div>
+<div class="bg-primary/50 h-2/3 flex-1 rounded-sm"></div>
+<div class="bg-primary/60 h-3/4 flex-1 rounded-sm"></div>
+<div class="bg-primary/80 h-5/6 flex-1 rounded-sm"></div>
+<div class="bg-primary h-full flex-1 rounded-sm"></div>
+</div>
+</div>
+</div>
+<!-- Data Health & Security Section -->
+<div class="bg-white dark:bg-slate-800/20 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden mb-8">
+<div class="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
+<h3 class="text-lg font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-amber-500">health_and_safety</span>
+                            Data Health &amp; Security Analysis
+                        </h3>
+<button class="text-xs font-bold text-primary hover:underline">RUN FULL SCAN</button>
+</div>
+<div class="divide-y divide-slate-200 dark:divide-slate-800">
+<!-- Alert 1 -->
+<div class="p-4 flex items-center gap-4 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+<div class="w-10 h-10 rounded bg-rose-500/10 text-rose-500 flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined">visibility_off</span>
+</div>
+<div class="flex-1">
+<h4 class="text-sm font-bold dark:text-slate-200">Unreadable HttpOnly Cookies</h4>
+<p class="text-xs text-slate-500">4 security-critical cookies detected (e.g., _session_id) that are not accessible via Document.cookie API.</p>
+</div>
+<div class="text-right">
+<span class="inline-block px-2 py-1 rounded bg-rose-500 text-[10px] font-black text-white uppercase tracking-tighter">Security Alert</span>
+</div>
+</div>
+<!-- Alert 2 -->
+<div class="p-4 flex items-center gap-4 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+<div class="w-10 h-10 rounded bg-amber-500/10 text-amber-500 flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined">database</span>
+</div>
+<div class="flex-1">
+<h4 class="text-sm font-bold dark:text-slate-200">Large IndexedDB Table Detected</h4>
+<p class="text-xs text-slate-500">Table 'offline_assets' in 'main_cache_db' exceeds 10MB. Consider implementing pruning strategies.</p>
+</div>
+<div class="text-right">
+<span class="inline-block px-2 py-1 rounded bg-amber-500 text-[10px] font-black text-white uppercase tracking-tighter">Optimization</span>
+</div>
+</div>
+<!-- Alert 3 -->
+<div class="p-4 flex items-center gap-4 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+<div class="w-10 h-10 rounded bg-emerald-500/10 text-emerald-500 flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined">check_circle</span>
+</div>
+<div class="flex-1">
+<h4 class="text-sm font-bold dark:text-slate-200">Local Storage Integrity</h4>
+<p class="text-xs text-slate-500">Schema validation passed for all 24 key-value pairs. No corrupt JSON strings found.</p>
+</div>
+<div class="text-right">
+<span class="inline-block px-2 py-1 rounded bg-emerald-500 text-[10px] font-black text-white uppercase tracking-tighter">Healthy</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Recent Activity / Snapshots -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<div class="lg:col-span-2">
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-lg font-bold">Storage Snapshots</h3>
+<button class="text-sm text-primary font-bold">View All</button>
+</div>
+<div class="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-xl">
+<table class="w-full text-left text-sm">
+<thead class="bg-slate-100 dark:bg-slate-800/50">
+<tr>
+<th class="px-4 py-3 font-bold text-xs uppercase tracking-wider text-slate-500">Snapshot Name</th>
+<th class="px-4 py-3 font-bold text-xs uppercase tracking-wider text-slate-500">Date</th>
+<th class="px-4 py-3 font-bold text-xs uppercase tracking-wider text-slate-500">Size</th>
+<th class="px-4 py-3 font-bold text-xs uppercase tracking-wider text-slate-500">Action</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-200 dark:divide-slate-800 bg-white dark:bg-slate-900/40">
+<tr>
+<td class="px-4 py-3 font-medium">Pre-Deployment Backup</td>
+<td class="px-4 py-3 text-slate-500">Oct 24, 2023 14:22</td>
+<td class="px-4 py-3">2.4 MB</td>
+<td class="px-4 py-3"><button class="text-primary material-symbols-outlined">download</button></td>
+</tr>
+<tr>
+<td class="px-4 py-3 font-medium">Auto-Snapshot (Daily)</td>
+<td class="px-4 py-3 text-slate-500">Oct 23, 2023 00:00</td>
+<td class="px-4 py-3">2.1 MB</td>
+<td class="px-4 py-3"><button class="text-primary material-symbols-outlined">download</button></td>
+</tr>
+<tr>
+<td class="px-4 py-3 font-medium">Manual Export: Auth Keys</td>
+<td class="px-4 py-3 text-slate-500">Oct 22, 2023 11:45</td>
+<td class="px-4 py-3">12 KB</td>
+<td class="px-4 py-3"><button class="text-primary material-symbols-outlined">download</button></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div>
+<h3 class="text-lg font-bold mb-4">System Information</h3>
+<div class="bg-primary/5 border border-primary/20 p-6 rounded-xl">
+<div class="space-y-4">
+<div class="flex justify-between">
+<span class="text-sm text-slate-500">Browser Agent</span>
+<span class="text-sm font-bold">Chrome 118.0</span>
+</div>
+<div class="flex justify-between">
+<span class="text-sm text-slate-500">OS Platform</span>
+<span class="text-sm font-bold">macOS 14.1</span>
+</div>
+<div class="flex justify-between">
+<span class="text-sm text-slate-500">Quota Limit</span>
+<span class="text-sm font-bold">128 GB</span>
+</div>
+<div class="flex justify-between">
+<span class="text-sm text-slate-500">Storage Usage</span>
+<span class="text-sm font-bold text-emerald-500">0.01% of Quota</span>
+</div>
+<div class="pt-4">
+<div class="w-full bg-slate-200 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[2%]"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

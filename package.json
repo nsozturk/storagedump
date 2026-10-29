@@ -1,0 +1,55 @@
+{
+  "name": "storagedump-extension",
+  "version": "0.2.1",
+  "description": "Free, open-source Chrome extension that inspects and exports cookies (incl. HttpOnly), localStorage, sessionStorage, IndexedDB, Cache Storage and service workers as lossless JSON/ZIP.",
+  "license": "MIT",
+  "author": "Enes Öztürk",
+  "homepage": "https://nsozturk.github.io/storagedump/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nsozturk/storagedump.git"
+  },
+  "keywords": [
+    "chrome-extension",
+    "manifest-v3",
+    "cookies",
+    "httponly-cookies",
+    "localstorage",
+    "sessionstorage",
+    "indexeddb",
+    "cache-storage",
+    "browser-storage",
+    "devtools",
+    "export"
+  ],
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite build --watch",
+    "build": "tsc -b && vite build",
+    "build:prod": "tsc -b && SOURCEMAP=false vite build",
+    "pack": "npm run build:prod && node scripts/pack.mjs",
+    "screenshot": "node scripts/screenshot.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "npm run build && node tests/e2e/dashboard.e2e.mjs"
+  },
+  "dependencies": {
+    "jszip": "^3.10.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@testing-library/react": "^16.1.0",
+    "@types/chrome": "^0.0.306",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.0.12",
+    "@types/react-dom": "^19.0.4",
+    "@vitejs/plugin-react": "^4.4.1",
+    "jsdom": "^26.0.0",
+    "playwright": "^1.58.2",
+    "typescript": "^5.8.3",
+    "vite": "^6.2.0",
+    "vitest": "^3.1.1"
+  }
+}

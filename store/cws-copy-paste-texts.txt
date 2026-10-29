@@ -1,0 +1,126 @@
+========================================
+CHROME WEB STORE - COPY-PASTE TEXTS
+StorageDump v0.2.1
+========================================
+Bu dosyadaki tüm metinler CWS form alanlarına doğrudan yapıştırılabilir.
+Markdown yok, sadece düz metin.
+========================================
+
+
+----------------------------------------
+EXTENSION NAME
+----------------------------------------
+StorageDump
+
+
+----------------------------------------
+SHORT DESCRIPTION (max 132 karakter)
+----------------------------------------
+Inspect and export all browser storage for any site — cookies, localStorage, sessionStorage, IndexedDB and Cache API.
+
+
+----------------------------------------
+DETAILED DESCRIPTION
+----------------------------------------
+StorageDump gives you a complete view of everything a website stores in your browser — cookies, localStorage, sessionStorage, IndexedDB, Cache API, and Service Workers — all in one place.
+
+Key Features
+
+One-click scan — open the popup and instantly see every storage category detected for the active tab.
+
+Badge — after you scan, the extension icon shows how many storage categories the site is using.
+
+Full export — download all storage data as a structured ZIP or combined JSON with a single click.
+
+Dashboard view — drill into each category with a full-page inspector that shows raw keys and values.
+
+Cookie support — reads both standard and partitioned (CHIPS) cookies using Chrome's native cookies API.
+
+Auto-refresh — switches context automatically when you change tabs.
+
+Use Cases
+
+Debugging web apps and checking what data a site persists.
+Security and privacy audits — see exactly what cookies and storage a site sets.
+Data export for testing or migration.
+Verifying that GDPR or cookie-consent flows actually clear storage.
+
+Supported Storage Types
+- Cookies (including partitioned / CHIPS)
+- localStorage
+- sessionStorage
+- IndexedDB
+- Cache API (Service Worker caches)
+- Service Workers
+
+StorageDump reads and exports your browser's storage data for the active tab. It does not send any data to external servers.
+
+
+----------------------------------------
+SINGLE PURPOSE DESCRIPTION
+----------------------------------------
+StorageDump reads and exports browser storage data (cookies, localStorage, sessionStorage, IndexedDB, Cache API) for the tab the user is currently viewing. No data leaves the user's device.
+
+
+----------------------------------------
+PERMISSION JUSTIFICATIONS
+(Her permission için ayrı kutuya gir)
+----------------------------------------
+
+-- cookies --
+The extension's core purpose is to read and display cookie data for the active tab. Without the cookies permission, the cookie category would be completely non-functional. Cookies are only read on user demand when the popup is opened or an export is triggered, never in the background.
+
+-- host permission: <all_urls> --
+Users need to inspect storage for any arbitrary website they visit, not just a predefined list. The extension cannot know in advance which sites a user will want to inspect. The all_urls permission is used exclusively for two purposes: (1) reading cookies for the current tab via chrome.cookies.getAll, which requires a URL parameter matching the site; and (2) injecting the in-page bridge script via chrome.scripting.executeScript to read localStorage, sessionStorage, IndexedDB, and Cache API, which are only accessible from the page's JavaScript context. The script is injected only when the user actively opens the popup or requests an export.
+
+-- scripting --
+Reading localStorage, sessionStorage, IndexedDB, and Cache API requires running JavaScript in the page's context. These APIs are not accessible from the extension background. The script is injected only on explicit user action and only reads data, it does not modify any page state.
+
+-- tabs --
+The extension needs to identify which tab is active in order to read storage for the correct site. After a scan the user starts, the extension icon shows a count for that tab; tabs.onUpdated clears it when the tab navigates. No page is read in the background.
+
+-- downloads --
+When the user clicks Export, the extension generates a ZIP or JSON file in memory and saves it to the user's Downloads folder via chrome.downloads.download. This is the only way to trigger a file save from a service worker context in Manifest V3.
+
+-- storage --
+User preferences such as default export format and theme are persisted locally via chrome.storage so settings survive browser restarts. No browsing data or site-specific data is stored here.
+
+-- activeTab --
+Used to get the URL and title of the currently active tab when the popup is opened, without requiring permanent broad access.
+
+
+----------------------------------------
+PRIVACY POLICY - DATA USAGE SORULARI
+(Privacy practices tab)
+----------------------------------------
+
+"Does your extension collect any user data?"
+Hayir seceneği yoksa: Yes — ama asagidaki tüm kutular kapatilmali:
+
+Personally identifiable information: Yes
+  Purpose: Provide core functionality only
+  Transfer to third parties: No
+  Transfer for unrelated use: No
+  Sold: No
+
+[Aciklama kutucugu varsa:]
+The extension reads cookies and storage data locally on the user's device to display and export it. No data is transmitted to any server. The developer does not collect, store, or have access to any user data. All processing happens entirely within the user's browser.
+
+
+----------------------------------------
+CATEGORY
+----------------------------------------
+Developer Tools
+
+
+----------------------------------------
+LANGUAGE
+----------------------------------------
+English
+
+
+========================================
+SCREENSHOT BOYUTLARI
+1280x800 veya 640x400 piksel
+En az 1, en fazla 5 screenshot
+========================================

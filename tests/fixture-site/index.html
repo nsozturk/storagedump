@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>StorageDump Fixture</title>
+    <style>
+      body {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        background: #0f172a;
+        color: #e2e8f0;
+        padding: 32px;
+      }
+      code {
+        color: #7dd3fc;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>StorageDump Fixture</h1>
+    <p id="status">Preparing browser storage…</p>
+    <script>
+      async function seedIndexedDb() {
+        await new Promise((resolve, reject) => {
+          const request = indexedDB.open('FixtureDB', 1);
+          request.onupgradeneeded = () => {
+            const db = request.result;
+            const store = db.createObjectStore('profiles');
+            store.put({ id: 'u1', role: 'admin' }, 'user_1');
+            store.put({ id: 'u2', role: 'editor' }, 'user_2');
+          };
+          request.onsuccess = () => {
+            request.result.close();
+            resolve();
+          };
+          request.onerror = () => reject(request.error);
+        });
+      }
+
+      async function seedCache() {
+        const cache = await caches.open('fixture-cache');
+        await cache.put(
+          '/tests/fixture-site/cached.json',
+          new Response(JSON.stringify({ ok: true, from: 'cache' }), {
+            headers: {
+              'content-type': 'application/json',
+              'content-length': '27'
+            }
+          })
+        );
+      }
+
+      async function seedServiceWorker() {
+        if ('serviceWorker' in navigator) {
+          const registration = await navigator.serviceWorker.register('/tests/fixture-site/sw.js');
+          await navigator.serviceWorker.ready;
+          return registration.scope;
+        }
+        return 'unavailable';
+      }
+
+      // Values that a lossy exporter silently changes (see tests/e2e/dashboard.e2e.mjs).
+      async function seedEdgeCases() {
+        localStorage.setItem('fixture:bignum', '7123456789012345678');
+        localStorage.setItem('fixture:quoted', '"quoted"');
+        // about:blank frames share this origin's storage; they must not duplicate entries.
+        document.body.append(Object.assign(document.createElement('iframe'), { hidden: true }));
+
+        await new Promise((resolve, reject) => {
+          const request = indexedDB.open('EdgeDB', 1);
+          request.onupgradeneeded = () => {
+            const store = request.result.createObjectStore('values');
+            const cyclic = { name: 'loop' };
+            cyclic.self = cyclic;
+            store.put(new Map([['a', 1]]), 'map');
+            store.put(new Set([1, 2]), 'set');
+            store.put(10n, 'bigint');
+            store.put(cyclic, 'cycle');
+            // Numeric (autoIncrement) keys: the row Delete must not stringify them.
+            const numbered = request.result.createObjectStore('numbered', { autoIncrement: true });
+            numbered.add({ n: 1 });
+            numbered.add({ n: 2 });
+          };
+          request.onsuccess = () => {
+            request.result.close();
+            resolve();
+          };
+          request.onerror = () => reject(request.error);
+        });
+
+        const cache = await caches.open('fixture-cache');
+        await cache.put('/tests/fixture-site/app.js', new Response('console.log(1);', { headers: { 'content-type': 'application/javascript' } }));
+        await cache.put('/tests/fixture-site/pixel.bin', new Response(new Uint8Array([0, 1, 2, 255]), { headers: { 'content-type': 'application/octet-stream' } }));
+      }
+
+      async function main() {
+        localStorage.setItem('fixture:local', JSON.stringify({ theme: 'dark', flags: ['alpha'] }));
+        sessionStorage.setItem('fixture:session', JSON.stringify({ step: 2, token: 'session-token' }));
+        document.cookie = 'fixtureCookie=visible; path=/; SameSite=Lax';
+        await seedIndexedDb();
+        await seedCache();
+        await seedEdgeCases();
+        const scope = await seedServiceWorker();
+        document.getElementById('status').textContent =
+          `Fixture ready on ${location.origin} with service worker scope ${scope}`;
+      }
+
+      main().catch((error) => {
+        document.getElementById('status').textContent = `Fixture failed: ${error.message}`;
+      });
+    </script>
+  </body>
+  </html>

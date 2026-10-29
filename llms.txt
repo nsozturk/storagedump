@@ -1,0 +1,22 @@
+# StorageDump
+
+> StorageDump is a free, open-source Chrome extension that inspects and exports everything a website stores in your browser — cookies (including HttpOnly and partitioned), localStorage, sessionStorage, IndexedDB, Cache Storage and service workers — as lossless JSON or ZIP, entirely on your machine.
+
+## What it does
+- One panel for cookies, localStorage, sessionStorage, IndexedDB, Cache Storage, service workers and extension storage.
+- Exports to JSON or ZIP (manifest + per-category files); nothing is read until you click Scan; no server.
+
+## Install
+- Chrome Web Store: https://chromewebstore.google.com/detail/storagedump/kihoghfekemdccfnpjefmggehpgnjnab
+- From source: `npm install && npm run build`, then load `dist/` unpacked in chrome://extensions.
+
+## Use
+Open a site → StorageDump icon → Scan → Export all, or Open dashboard.
+
+## Links
+- [README](https://github.com/nsozturk/storagedump/blob/main/README.md)
+- [AGENTS.md](https://github.com/nsozturk/storagedump/blob/main/AGENTS.md)
+- [Agent rule](https://github.com/nsozturk/storagedump/blob/main/GLOBAL_AGENT_RULE.md)
+- [Docs](https://nsozturk.github.io/storagedump/)
+- [Privacy](https://github.com/nsozturk/storagedump/blob/main/docs/privacy.md)
+- [Releases](https://github.com/nsozturk/storagedump/releases)

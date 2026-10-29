@@ -1,0 +1,375 @@
+Design a modern, production-ready Chrome extension UI for a power-user data backup tool called “StorageVault” (working title). The extension’s purpose is to inspect and export all browser-side application data for the current website or browser profile context, including Local Storage, Session Storage, Cookies, IndexedDB, Cache Storage, Service Worker data, Extension Storage, and optionally downloadable JSON backups.
+
+This is not a casual consumer app. It should feel like a trustworthy, high-clarity, premium browser utility for developers, security researchers, QA engineers, technical founders, and advanced users who want to back up or inspect everything stored under Chrome DevTools > Application. The UI must balance technical density with clean readability. It should look polished, serious, efficient, and reliable.
+
+PRIMARY PRODUCT GOAL
+Create a Chrome extension experience that lets the user:
+1. Detect all available storage/data categories for the current site or current browser context.
+2. See which categories contain data and their approximate sizes / item counts.
+3. Select individual categories or choose “Export All”.
+4. Preview what will be exported.
+5. Export data safely in JSON, ZIP, or structured folders.
+6. Warn the user about limitations (for example HttpOnly cookies not readable from page context, extension permissions, binary cache responses, size-related partial exports, service worker restrictions, etc.).
+7. Provide confidence through transparency, auditability, and progress feedback.
+
+OVERALL DESIGN DIRECTION
+The interface should feel like a mix of:
+- Chrome DevTools professionalism
+- Linear / Raycast-level clarity and focus
+- A premium desktop utility
+- Subtle cybersecurity / developer-tool seriousness
+- Extremely structured information hierarchy
+
+Avoid a playful, cartoonish, startup-marketing look.
+Avoid excessive gradients, neon overload, childish iconography, or glassmorphism chaos.
+The design should feel robust, sharp, rational, and trustworthy.
+
+VISUAL STYLE
+- Desktop-first extension design with Chrome extension popup constraints, but also include an “expanded dashboard tab view” for advanced workflows.
+- Dark theme as primary, light theme as secondary.
+- Clean spacing, crisp typography, high contrast, precision-aligned layouts.
+- Monospace used selectively for technical values, file names, origin URLs, key names, database names, and export metadata.
+- Main UI font should feel modern and highly legible.
+- Rounded corners should be subtle to medium, not bubbly.
+- Shadows should be restrained and professional.
+- Color system should emphasize information status:
+  - Neutral slate / charcoal base
+  - Blue for actionable controls and technical selection
+  - Green for successful detection/export
+  - Amber for warnings / partial limitations
+  - Red only for critical failures or inaccessible data
+- No loud rainbow colors.
+- Small but meaningful iconography for storage categories:
+  - local storage
+  - session storage
+  - cookies
+  - IndexedDB
+  - cache storage
+  - service workers
+  - extension storage
+  - archive/export bundle
+- Icons should feel technical, minimal, and consistent.
+
+INFORMATION ARCHITECTURE
+Design the following surfaces:
+
+1. EXTENSION POPUP — QUICK ACTION VIEW
+This is the first screen when the extension icon is clicked.
+It should show:
+- Current site origin / domain
+- Scan status
+- A compact summary card with:
+  - total detected categories
+  - total estimated items
+  - total estimated data size
+  - number of exportable categories
+- A vertical list of storage categories with:
+  - icon
+  - name
+  - detected/not detected state
+  - item count or “unknown”
+  - size estimate if available
+  - access status (readable / partial / restricted)
+- Primary actions:
+  - Scan current site
+  - Export all
+  - Advanced view
+- Secondary actions:
+  - Select categories
+  - Refresh scan
+  - Open settings
+- A small inline technical note section for limitations
+
+The popup should feel efficient and immediately useful, not crowded.
+It must fit the extension popup format but feel premium and highly usable.
+
+2. CATEGORY SELECTION VIEW
+A more detailed selection interface where the user can:
+- Toggle each data category on/off
+- Expand each category row for details
+- See what exactly will be exported
+- Read category-specific warnings
+- View permission requirements if any
+- Choose export format:
+  - JSON
+  - ZIP
+  - structured files
+- Choose export scope:
+  - current origin only
+  - current tab context
+  - browser profile-related where permitted
+- Enable options like:
+  - pretty print JSON
+  - include metadata
+  - include timestamps
+  - split large files
+  - skip binary bodies
+  - mask sensitive fields
+
+Each category card should include highly structured metadata:
+- category name
+- status badge
+- estimated item count
+- estimated size
+- extraction method
+- limitations
+- sample export shape preview
+
+3. ADVANCED DASHBOARD TAB VIEW
+Design a full browser tab dashboard for heavier workflows.
+This should feel like a proper desktop utility.
+
+Layout idea:
+- Left sidebar: categories and navigation
+- Main content area: details, previews, export settings
+- Top bar: site origin, scan state, permissions, search, export button
+- Right-side optional inspector panel for selected items
+
+Sections in the advanced dashboard:
+- Overview
+- Data categories
+- Preview explorer
+- Export settings
+- Permissions & limitations
+- Activity log / scan log
+- Saved exports / export history
+
+OVERVIEW PANEL
+Show:
+- Site identity card with favicon, origin, protocol, last scan timestamp
+- Security / permissions indicators
+- Summary metrics
+- “Data health” section
+- Quick export CTA
+- “What may not be fully exportable” explanation
+
+DATA CATEGORY DETAIL PANEL
+When user clicks a category, show:
+- Category title and icon
+- Explanation of what it contains
+- Access level
+- Estimated size
+- Record count
+- Technical caveats
+- Expandable preview table or tree
+- Copy raw JSON button
+- Export only this category button
+
+Design separate visuals for:
+- Local Storage
+- Session Storage
+- Cookies
+- IndexedDB database list
+- Object stores under each database
+- Cache entries with URL, status, content type, size
+- Service worker registrations and cache relations
+- Extension storage blocks
+- Unreadable/restricted data placeholders
+
+4. PREVIEW EXPLORER
+Design a structured data explorer view for inspecting export content before download.
+This should feel like a lightweight JSON and table hybrid inspector.
+
+Include:
+- Search bar
+- Filter by key/type/category
+- Tree navigation on the left
+- Table or JSON preview on the right
+- Tabs for raw / parsed / metadata
+- Badges for truncated, binary, partial, unreadable, masked
+- Copy actions
+- Row expanders
+- Payload size indicators
+
+The explorer should make even technical data feel manageable and not visually intimidating.
+
+5. EXPORT FLOW
+Design a clear multi-step export flow:
+Step 1: Scan
+Step 2: Review findings
+Step 3: Choose categories
+Step 4: Choose format/options
+Step 5: Export progress
+Step 6: Completion summary
+
+The export progress experience should be especially polished:
+- Progress bar
+- Per-category status rows
+- In progress / success / partial / failed states
+- Estimated time or step count
+- Current task label, such as:
+  - Reading Local Storage
+  - Dumping IndexedDB
+  - Serializing Cache Storage
+  - Preparing archive
+- Error handling with retry and “download partial export” options
+
+Completion screen should show:
+- Export finished
+- file name
+- total categories exported
+- total size
+- success count
+- partial count
+- warnings count
+- open export folder / copy summary / export again
+
+6. WARNINGS, FAILURES, AND EDGE STATES
+The design must include explicit empty, warning, and error states:
+- No storage found
+- Permissions missing
+- Site inaccessible
+- Restricted context
+- Huge IndexedDB detected
+- Binary-heavy Cache Storage
+- HttpOnly cookie limitation
+- Service worker unavailable
+- Export partially completed
+- Corrupted or unreadable data entry
+- User cancelled export
+
+These states should feel informative, not alarming.
+Warnings should be visually distinct but calm and precise.
+
+7. SETTINGS PAGE
+Design a settings interface for:
+- default export format
+- pretty print JSON
+- compression level
+- split file threshold
+- include metadata toggle
+- include unreadable placeholders
+- sensitive value masking
+- auto-scan on popup open
+- retain export history
+- theme switcher
+- developer diagnostics
+- debug logs
+
+Also include:
+- permissions section
+- privacy statement
+- local-only processing reassurance
+- “what data leaves the browser?” explanation with answer: none, unless user explicitly saves/export files locally
+
+TRUST AND PRIVACY UX
+This is critical.
+The extension deals with potentially sensitive browser data, so the UI must strongly communicate:
+- local processing
+- explicit user control
+- no hidden upload behavior
+- transparent limitations
+- precise scope of access
+- what is and is not exportable
+
+Include a compact but professional privacy/trust module, not a giant legal page.
+Think “serious developer tool that respects user data”.
+
+COPY STYLE
+All copy should be:
+- concise
+- technical but understandable
+- calm and honest
+- never over-marketing
+- transparent about limits
+- confidence-building without hype
+
+Examples of tone:
+- “3 categories partially exportable”
+- “HttpOnly cookies cannot be read from page context”
+- “Large cache bodies may be truncated depending on browser limits”
+- “Export prepared locally. No remote upload detected.”
+
+MICROINTERACTIONS
+Include subtle but polished interaction design:
+- category expand/collapse
+- checkbox selection animation
+- progress state changes
+- copy success tooltip
+- hover details on status badges
+- inline validation for export settings
+- soft transitions between scan states
+
+Avoid flashy or distracting animation.
+Think precise, deliberate, useful motion.
+
+COMPONENTS TO DESIGN
+Please generate a complete UI system and screen set for this extension including:
+- popup cards
+- category rows
+- badges
+- segmented controls
+- toggles
+- technical info callouts
+- warning banners
+- empty states
+- progress components
+- export history rows
+- JSON preview panel
+- tree explorer
+- sidebar navigation
+- search/filter bars
+- table rows
+- modal dialogs
+- confirmation states
+- file export summary cards
+
+SCREEN DELIVERABLES
+Generate high-fidelity screens for:
+1. Extension popup idle state
+2. Extension popup after successful scan
+3. Category selection view
+4. Advanced dashboard overview
+5. IndexedDB detail view
+6. Cache Storage preview view
+7. Export settings modal
+8. Export progress screen
+9. Export complete summary screen
+10. Permissions/warnings screen
+11. Settings page
+12. Empty/error/partial export states
+
+TECHNICAL CONTEXT TO REFLECT IN THE DESIGN
+The UI should visually support these realities:
+- data may come from different browser APIs
+- some categories may be readable, partially readable, or restricted
+- export can produce JSON or archive files
+- current site context matters
+- users may want per-category or full export
+- some data sets may be very large
+- inspection before export is valuable
+- extension permissions should be visible and understandable
+- advanced users want transparency, not simplification theater
+
+LAYOUT GUIDELINES
+- Use strong hierarchy and spacing rhythm
+- Keep scan summary above the fold
+- Make “Export All” obvious but not reckless
+- Make warnings visible before export
+- Make detailed inspection accessible without cluttering the popup
+- In the advanced dashboard, prefer modular panes and tool-like structure
+- Preserve readability for long keys, database names, URLs, and technical metadata
+
+DESIGN REFERENCES IN SPIRIT
+Reference the seriousness and clarity of:
+- Chrome DevTools
+- Raycast extensions
+- Linear
+- modern security dashboards
+- premium macOS utilities
+But do not copy any brand directly.
+
+OUTPUT FORMAT
+Return:
+1. a complete visual design concept
+2. component breakdown
+3. color palette
+4. typography system
+5. spacing system
+6. popup and dashboard layouts
+7. all key screens with annotations
+8. interaction notes
+9. dark and light mode variants
+10. developer handoff notes for implementation
+
+The final result should feel like a real premium Chrome extension that developers would trust to inspect and export browser storage safely and clearly.
