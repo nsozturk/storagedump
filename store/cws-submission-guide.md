@@ -74,6 +74,8 @@ Open `store/promo-tile.html` in Chrome (zoom 100%), take a screenshot, crop to 4
 ### Privacy policy URL
 You **must** host the privacy policy at a public URL because the extension requests `cookies` + `<all_urls>`.
 
+Store listing → **Homepage URL**: `https://storagedump.lamma.dev/` · **Support URL**: `https://storagedump.lamma.dev/support`
+
 Use the canonical policy page:
 ```
 https://storagedump.lamma.dev/privacy

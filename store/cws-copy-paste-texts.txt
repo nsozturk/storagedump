@@ -90,6 +90,12 @@ Used to get the URL and title of the currently active tab when the popup is open
 
 
 ----------------------------------------
+HOMEPAGE URL
+https://storagedump.lamma.dev/
+
+SUPPORT URL
+https://storagedump.lamma.dev/support
+
 PRIVACY POLICY URL
 https://storagedump.lamma.dev/privacy
 
