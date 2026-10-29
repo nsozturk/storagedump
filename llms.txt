@@ -18,5 +18,6 @@ Open a site → StorageDump icon → Scan → Export all, or Open dashboard.
 - [AGENTS.md](https://github.com/nsozturk/storagedump/blob/main/AGENTS.md)
 - [Agent rule](https://github.com/nsozturk/storagedump/blob/main/GLOBAL_AGENT_RULE.md)
 - [Docs](https://nsozturk.github.io/storagedump/)
-- [Privacy](https://github.com/nsozturk/storagedump/blob/main/docs/privacy.md)
+- [Privacy policy](https://storagedump.lamma.dev/privacy)
+- [Privacy notes](https://github.com/nsozturk/storagedump/blob/main/docs/privacy.md)
 - [Releases](https://github.com/nsozturk/storagedump/releases)

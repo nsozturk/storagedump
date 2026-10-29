@@ -90,6 +90,9 @@ Used to get the URL and title of the currently active tab when the popup is open
 
 
 ----------------------------------------
+PRIVACY POLICY URL
+https://storagedump.lamma.dev/privacy
+
 PRIVACY POLICY - DATA USAGE SORULARI
 (Privacy practices tab)
 ----------------------------------------

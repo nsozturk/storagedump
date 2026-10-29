@@ -67,7 +67,7 @@ Open `chrome://extensions`, enable **Developer mode**, click **Load unpacked** a
 | `storage` | Settings and export history (metadata only) |
 | `tabs` | Find the tab you are inspecting; clear its badge when it navigates |
 
-Details: [docs/permissions.md](docs/permissions.md) · [docs/privacy.md](docs/privacy.md)
+Details: [Privacy policy](https://storagedump.lamma.dev/privacy) · [docs/permissions.md](docs/permissions.md) · [docs/privacy.md](docs/privacy.md)
 
 ## Development
 

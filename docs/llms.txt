@@ -27,7 +27,8 @@ Click the toolbar icon, press Scan, then Export all or Open dashboard.
 - [Documentation](https://nsozturk.github.io/storagedump/): full docs portal with FAQ and alternatives
 - [Repository](https://github.com/nsozturk/storagedump): source code and README
 - [AGENTS.md](https://github.com/nsozturk/storagedump/blob/main/AGENTS.md): contract for coding agents
-- [Privacy](https://github.com/nsozturk/storagedump/blob/main/docs/privacy.md): what is stored and what leaves the browser
+- [Privacy policy](https://storagedump.lamma.dev/privacy)
+- [Privacy notes](https://github.com/nsozturk/storagedump/blob/main/docs/privacy.md): what is stored and what leaves the browser
 - [Permissions](https://github.com/nsozturk/storagedump/blob/main/docs/permissions.md): why each permission is needed
 - [Releases](https://github.com/nsozturk/storagedump/releases): version history
 - [Website](https://storagedump.lamma.dev)

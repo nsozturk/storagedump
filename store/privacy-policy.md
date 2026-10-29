@@ -1,5 +1,7 @@
 # Privacy Policy — StorageDump
 
+> Canonical version: https://storagedump.lamma.dev/privacy
+
 **Last updated: March 2025**
 
 ## Overview

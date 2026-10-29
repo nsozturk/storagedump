@@ -74,19 +74,11 @@ Open `store/promo-tile.html` in Chrome (zoom 100%), take a screenshot, crop to 4
 ### Privacy policy URL
 You **must** host the privacy policy at a public URL because the extension requests `cookies` + `<all_urls>`.
 
-**Option A — GitHub Pages (recommended):**
-1. Push `store/privacy-policy.html` to your repo
-2. Enable GitHub Pages on the repo (Settings → Pages → `main` branch / `docs` folder OR use the file directly)
-3. URL will be: `https://<username>.github.io/<repo>/store/privacy-policy.html`
-
-**Option B — GitHub raw URL:**
+Use the canonical policy page:
 ```
-https://raw.githubusercontent.com/<username>/<repo>/main/store/privacy-policy.html
+https://storagedump.lamma.dev/privacy
 ```
-(Chrome may not render it nicely, but it's accepted as a policy URL)
-
-**Option C — Gist:**
-Create a GitHub Gist with the HTML content and use its URL.
+(Source: `content/apps/storagedump/privacy.mdx` in the lamma-dev site. `store/privacy-policy.md` is kept in sync as a plain-text copy.)
 
 Enter the URL in the **Privacy policy URL** field.
 
