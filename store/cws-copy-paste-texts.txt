@@ -83,7 +83,7 @@ The extension needs to identify which tab is active in order to read storage for
 When the user clicks Export, the extension generates a ZIP or JSON file in memory and saves it to the user's Downloads folder via chrome.downloads.download. This is the only way to trigger a file save from a service worker context in Manifest V3.
 
 -- storage --
-User preferences such as default export format and theme are persisted locally via chrome.storage so settings survive browser restarts. No browsing data or site-specific data is stored here.
+User preferences such as the default export format and export options, plus metadata about past exports (file name, size, checksum), are kept locally via chrome.storage so they survive browser restarts. No storage contents of the inspected sites are kept there.
 
 -- activeTab --
 Used to get the URL and title of the currently active tab when the popup is opened, without requiring permanent broad access.

@@ -138,7 +138,7 @@ When the user clicks "Export", the extension generates a ZIP or JSON file in mem
 
 ### `storage`
 ```
-User preferences (default export format, theme, etc.) are persisted locally via chrome.storage.sync so settings survive browser restarts. No browsing data or site-specific data is stored here.
+User preferences such as the default export format and export options, plus metadata about past exports (file name, size, checksum), are kept locally via chrome.storage so they survive browser restarts. No storage contents of the inspected sites are kept there.
 ```
 
 ### `activeTab`

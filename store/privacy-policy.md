@@ -24,7 +24,7 @@ All data processed by StorageDump stays entirely on your device:
 | `cookies` + `<all_urls>` | To read cookies for any site you visit, on demand |
 | `scripting` | To inject a script that reads localStorage, sessionStorage, IndexedDB, and Cache API from the page context |
 | `tabs` | To identify the active tab and to clear its badge counter when the tab navigates |
-| `storage` | To save your preferences (export format, theme) locally |
+| `storage` | To save your preferences (export format, export options) and export history metadata locally |
 | `downloads` | To save exported files to your computer |
 
 StorageDump only reads storage data when you actively open the popup, open the dashboard, or trigger an export. It does not run persistent background jobs that monitor your browsing.
