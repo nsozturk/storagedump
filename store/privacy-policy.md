@@ -39,6 +39,15 @@ StorageDump does not share any data with third parties. There are no advertising
 
 Your extension preferences (chosen export format, auto-scan setting) are saved via `chrome.storage`, which stores them in your Chrome profile. If you are signed in to Chrome, these preferences may sync across your devices via Google's sync infrastructure, subject to Google's privacy policy. StorageDump has no control over this sync behavior.
 
+## Optional Local Companion
+
+StorageDump has an optional feature, off by default, for people who use its exports in their own scripts.
+If you install the companion program on your computer and turn the feature on (Chrome then asks for the
+`nativeMessaging` permission), that program can ask StorageDump for an export of a site you have open in a
+tab without a click, and saves it in `~/.storagedump/dumps/` on your computer. The data goes only to that
+local program through Chrome's Native Messaging; nothing is sent over the network, and each request is
+listed in Export history. Turn the feature off at any time in Settings.
+
 ## Changes to This Policy
 
 If this policy is updated, the "Last updated" date at the top of this page will change. Continued use of the extension after any changes constitutes acceptance of the updated policy.

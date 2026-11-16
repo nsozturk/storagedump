@@ -1,5 +1,6 @@
 import type {
   AppSettings,
+  CompanionStatus,
   CategoryDetail,
   CategoryDetailTarget,
   DebugSnapshot,
@@ -90,6 +91,10 @@ export interface MessageMap {
   GET_DEBUG_SNAPSHOT: {
     request: undefined;
     response: DebugSnapshot;
+  };
+  GET_COMPANION_STATUS: {
+    request: undefined;
+    response: CompanionStatus;
   };
 }
 

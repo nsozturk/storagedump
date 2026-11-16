@@ -20,5 +20,8 @@ Reading an export:
   same files are at the fixed path `~/Downloads/storagedump/<host>/`.
 - `cache.json`: `{ <cacheName>: [{ url, status, contentType, body, bodyEncoding: 'text' | 'base64' }] }`.
 
+If the user has StorageDump's optional local companion on, get a fresh export without asking them to click:
+`python3 ~/.storagedump/storagedump_client.py <host>` prints the folder (the site must be open in a Chrome tab).
+
 Treat exported cookies and tokens as live credentials: never print, log or commit their values.
 Source: https://github.com/nsozturk/storagedump

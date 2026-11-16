@@ -13,6 +13,7 @@ import type { MessageEnvelope, MessageMap, MessageResponse, MessageType } from '
 import type {
   ActiveContext,
   AppSettings,
+  CompanionStatus,
   CategoryDetail,
   CategoryExport,
   ExportReportCategory,
@@ -62,7 +63,8 @@ const handlers: { [K in MessageType]: Handler<K> } = {
   GET_ACTIVE_CONTEXT: async (_payload, sender) => getActiveContext(sender),
   REQUEST_ORIGIN_PERMISSION: async (_payload, sender) => requestActiveOriginPermission(sender),
   GET_EXPORT_PREVIEW: async ({ selection }, sender) => getExportPreview(selection, sender),
-  GET_DEBUG_SNAPSHOT: async (_payload, sender) => getDebugSnapshot(sender)
+  GET_DEBUG_SNAPSHOT: async (_payload, sender) => getDebugSnapshot(sender),
+  GET_COMPANION_STATUS: async () => companionStatus()
 };
 
 const exportJobs = new Map<string, ExportJobStatus>();
@@ -108,6 +110,7 @@ async function loadSettings(): Promise<AppSettings> {
 async function saveSettings(settings: AppSettings): Promise<AppSettings> {
   const merged = { ...DEFAULT_SETTINGS, ...settings };
   await chrome.storage.local.set({ [SETTINGS_STORAGE_KEY]: merged });
+  await syncCompanion();
   return merged;
 }
 
@@ -763,7 +766,10 @@ function buildAllFramesStorageDetail(kind: 'local' | 'session', frames: FrameSto
 }
 
 async function scanActiveSite(sender?: chrome.runtime.MessageSender): Promise<ScanResult> {
-  const context = await getActiveContext(sender);
+  return scanContext(await getActiveContext(sender));
+}
+
+async function scanContext(context: ActiveContext): Promise<ScanResult> {
   const extension = await scanExtensionStorage();
   const cookies = await scanCookies(context);
 
@@ -1374,3 +1380,147 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
     void chrome.action.setBadgeText({ tabId, text: '' }).catch(() => {});
   }
 });
+
+// ─── Local companion (optional, off by default) ──────────────────────────────
+// With the setting on and the optional "nativeMessaging" permission granted, a
+// small local program the user installed (companion/) can ask for a fresh export
+// of a site that is open in a tab, so scripts need no click. Chrome starts that
+// program and only this extension may talk to it; there is no network port.
+// Everything it asks for is written to the export history.
+
+const COMPANION_HOST = 'dev.lamma.storagedump';
+const COMPANION_CHUNK_CHARS = 1_000_000;
+let companionPort: chrome.runtime.Port | null = null;
+let companionError: string | undefined;
+
+type CompanionRequest = { id?: string; op?: string; host?: string; categories?: StorageCategoryId[] };
+
+async function companionStatus(): Promise<CompanionStatus> {
+  const settings = await loadSettings();
+  return {
+    enabled: settings.companionEnabled,
+    permission: await chrome.permissions.contains({ permissions: ['nativeMessaging'] }),
+    connected: companionPort !== null,
+    error: companionPort ? undefined : companionError
+  };
+}
+
+// Connect when the setting is on, disconnect when it is off.
+async function syncCompanion(): Promise<void> {
+  const settings = await loadSettings();
+  const allowed = settings.companionEnabled && (await chrome.permissions.contains({ permissions: ['nativeMessaging'] }));
+  if (!allowed) {
+    companionPort?.disconnect();
+    companionPort = null;
+    companionError = undefined;
+    return;
+  }
+  if (companionPort) {
+    return;
+  }
+  try {
+    const port = chrome.runtime.connectNative(COMPANION_HOST);
+    companionPort = port;
+    companionError = undefined;
+    port.onMessage.addListener((message: CompanionRequest) => void handleCompanionRequest(port, message));
+    port.onDisconnect.addListener(() => {
+      companionError = chrome.runtime.lastError?.message ?? 'The companion closed the connection.';
+      if (companionPort === port) {
+        companionPort = null;
+      }
+    });
+  } catch (error) {
+    companionError = error instanceof Error ? error.message : 'Could not start the companion.';
+  }
+}
+
+async function handleCompanionRequest(port: chrome.runtime.Port, request: CompanionRequest): Promise<void> {
+  const id = request.id;
+  const fail = (error: string) => port.postMessage({ id, ok: false, error });
+  try {
+    if (request.op === 'ping') {
+      port.postMessage({ id, ok: true, version: chrome.runtime.getManifest().version });
+      return;
+    }
+    if (request.op !== 'dump' || typeof request.host !== 'string' || !/^[a-z0-9.-]+(:\d+)?$/i.test(request.host)) {
+      fail('Unknown request. Use {"op":"dump","host":"example.com"}.');
+      return;
+    }
+
+    // Only a site the user already has open: the companion never opens or navigates tabs.
+    const tabs = (await chrome.tabs.query({})).filter((tab) => {
+      try {
+        return tab.id != null && tab.url != null && isScriptableUrl(tab.url) && new URL(tab.url).host === request.host;
+      } catch {
+        return false;
+      }
+    });
+    const tab = tabs.find((candidate) => candidate.active) ?? tabs[0];
+    if (!tab?.id || !tab.url) {
+      fail(`No open tab for ${request.host}. Open the site in Chrome first.`);
+      return;
+    }
+
+    const context: ActiveContext = { tabId: tab.id, windowId: tab.windowId, url: tab.url, origin: new URL(tab.url).origin, title: tab.title };
+    const settings = await loadSettings();
+    const scanResult = await scanContext(context);
+    const categoryIds = (request.categories?.length ? request.categories : scanResult.categories.map((category) => category.id)).filter(
+      (categoryId) => categoryId !== 'extension'
+    );
+    const payload = await buildExportPayload(
+      context,
+      scanResult,
+      { categoryIds },
+      {
+        format: 'folder',
+        prettyPrint: settings.prettyPrint,
+        includeMetadata: settings.includeMetadata,
+        includeTimestamps: settings.includeTimestamps,
+        splitLargeFiles: settings.splitLargeFiles,
+        splitThresholdBytes: settings.splitThresholdBytes,
+        skipBinaryBodies: settings.skipBinaryBodies,
+        maskSensitiveValues: settings.maskSensitiveValues,
+        scriptFormats: settings.scriptFormats
+      }
+    );
+
+    // A native message may not exceed 64 MiB: send each file in pieces.
+    for (const file of payload.files) {
+      const pieces = Math.max(1, Math.ceil(file.content.length / COMPANION_CHUNK_CHARS));
+      for (let index = 0; index < pieces; index++) {
+        port.postMessage({
+          id,
+          file: file.path,
+          last: index === pieces - 1,
+          data: file.content.slice(index * COMPANION_CHUNK_CHARS, (index + 1) * COMPANION_CHUNK_CHARS)
+        });
+      }
+    }
+    port.postMessage({ id, ok: true, done: true, origin: context.origin, files: payload.files.length, problemCount: payload.problemCount });
+
+    // The user can always see what the companion took.
+    if (settings.retainExportHistory) {
+      await saveHistory([
+        {
+          id: makeId('history'),
+          fileName: `Local companion → ${request.host}`,
+          format: 'folder',
+          origin: context.origin,
+          createdAt: new Date().toISOString(),
+          categoryCount: payload.manifest.categories.length,
+          totalSizeBytes: payload.totalSizeBytes,
+          warningCount: payload.problemCount,
+          partial: payload.manifest.partial,
+          checksum: await sha256(stableStringify(payload.manifest))
+        },
+        ...(await loadHistory())
+      ]);
+    }
+  } catch (error) {
+    fail(error instanceof Error ? error.message : 'The export failed.');
+  }
+}
+
+// The service worker stays alive while the companion is connected; reconnect
+// whenever it starts again.
+void syncCompanion();

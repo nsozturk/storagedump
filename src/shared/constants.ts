@@ -22,6 +22,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   skipBinaryBodies: true,
   maskSensitiveValues: false,
   scriptFormats: true,
+  companionEnabled: false,
   autoScanOnOpen: true,
   retainExportHistory: true,
   theme: 'dark',

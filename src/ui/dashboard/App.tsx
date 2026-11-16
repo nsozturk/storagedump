@@ -602,6 +602,71 @@ function SettingsPanel({
           Save settings
         </button>
       </div>
+
+      <CompanionSettings settings={settings} onSave={onSave} busy={busy} />
+    </div>
+  );
+}
+
+// Optional local companion: lets a program the user installed ask for an export
+// without a click. Off by default; turning it on asks Chrome for the permission.
+function CompanionSettings({
+  settings,
+  onSave,
+  busy
+}: {
+  settings: typeof DEFAULT_SETTINGS;
+  onSave: (settings: typeof DEFAULT_SETTINGS) => Promise<void>;
+  busy: boolean;
+}) {
+  const [status, setStatus] = useState<Awaited<ReturnType<typeof extensionApi.getCompanionStatus>> | null>(null);
+  const refresh = () => void extensionApi.getCompanionStatus().then(setStatus).catch(() => setStatus(null));
+
+  useEffect(refresh, [settings.companionEnabled]);
+
+  async function toggle(enable: boolean) {
+    if (enable) {
+      // Must run in this click: Chrome only shows the permission prompt on a user gesture.
+      const granted = await chrome.permissions.request({ permissions: ['nativeMessaging'] });
+      if (!granted) {
+        return;
+      }
+    }
+    await onSave({ ...settings, companionEnabled: enable });
+    if (!enable) {
+      await chrome.permissions.remove({ permissions: ['nativeMessaging'] });
+    }
+    window.setTimeout(refresh, 600);
+  }
+
+  return (
+    <div className="sd-notice" style={{ marginTop: 24 }}>
+      <div className="sd-panel-head" style={{ marginBottom: 0 }}>
+        <strong>Local companion (optional)</strong>
+        <span className={`sd-pill ${status?.connected ? 'readable' : settings.companionEnabled ? 'partial' : 'unavailable'}`}>
+          {status?.connected ? 'connected' : settings.companionEnabled ? 'not connected' : 'off'}
+        </span>
+      </div>
+      <span className="sd-subtle">
+        When this is on, a small program you install on this computer can ask StorageDump for a fresh export of a site
+        you have open, without a click, so your own scripts can read it from <span className="sd-code">~/.storagedump/dumps/</span>.
+        Nothing is sent over the network, only that program can connect, and every request appears in Export history.
+        Leave it off unless you run such scripts. Setup: <span className="sd-code">python3 companion/install.py</span> from
+        the StorageDump repository.
+      </span>
+      {settings.companionEnabled && status && !status.connected ? (
+        <span style={{ color: '#fcd34d' }}>{status.error ?? 'The companion is not running.'} Run the installer, then press Check again.</span>
+      ) : null}
+      <div className="sd-actions">
+        <button className="sd-button" onClick={() => void toggle(!settings.companionEnabled)} disabled={busy}>
+          {settings.companionEnabled ? 'Turn off local companion' : 'Turn on local companion'}
+        </button>
+        {settings.companionEnabled ? (
+          <button className="sd-button" onClick={() => void onSave(settings).then(() => window.setTimeout(refresh, 600))} disabled={busy}>
+            Check again
+          </button>
+        ) : null}
+      </div>
     </div>
   );
 }

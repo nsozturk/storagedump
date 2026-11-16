@@ -32,7 +32,7 @@
     "store-assets": "npm run build:prod && node scripts/store-assets.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:e2e": "npm run build && node tests/e2e/dashboard.e2e.mjs",
+    "test:e2e": "npm run build && node tests/e2e/dashboard.e2e.mjs && node tests/e2e/companion.e2e.mjs",
     "explore": "npm run build && node tests/e2e/explore-real-sites.mjs"
   },
   "dependencies": {

@@ -40,7 +40,10 @@ cookies, localStorage, sessionStorage, IndexedDB, Cache Storage and service work
   `chrome.scripting.executeScript`, keep dynamic imports as a bare `import(variable)`; the bundler rewrites
   anything else into a helper that does not exist in the page.
 - `cookies.json` and the other category files are a contract for users' scripts: add files, never change shapes.
-- Never read pages in the background. The badge is set only after a user-started scan (store listing promise).
+- `companion/` (Python, stdlib): optional Native Messaging host + client + installer. `tests/e2e/companion.e2e.mjs`
+  runs it for real. The companion may only export a site already open in a tab, must log each request to
+  export history, and `nativeMessaging` stays in `optional_permissions`.
+- Never read pages in the background (the companion, when the user turned it on, is the one exception). The badge is set only after a user-started scan (store listing promise).
 - Any dashboard/UI change: run `npm run test:e2e`; the layout cases fail on CLS > 0.05 or shell movement > 1 px.
 
 ## Do not

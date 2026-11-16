@@ -8,7 +8,8 @@ export const WHATS_NEW = {
     'New "Folder" format: unzipped files in Downloads/storagedump/<site>/, replaced on every export.',
     'export-report.json lists every read that failed or came back short.',
     'Dashboard: filter, full values, "Load all", and tables that stay on screen.',
-    'Step-by-step export progress and "Report a problem" links.'
+    'Step-by-step export progress and "Report a problem" links.',
+    'Optional local companion (off by default) so your own scripts can request an export. See Settings.'
   ]
 };
 

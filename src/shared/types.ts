@@ -115,6 +115,8 @@ export interface AppSettings {
   skipBinaryBodies: boolean;
   maskSensitiveValues: boolean;
   scriptFormats: boolean;
+  /** Optional local companion (Native Messaging). Off unless the user turns it on. */
+  companionEnabled: boolean;
   autoScanOnOpen: boolean;
   retainExportHistory: boolean;
   theme: ThemeMode;
@@ -174,6 +176,15 @@ export interface ExportJobStatus {
   startedAt?: number;
   /** Problems written to export-report.json. */
   problemCount?: number;
+}
+
+export interface CompanionStatus {
+  enabled: boolean;
+  /** The optional "nativeMessaging" permission has been granted. */
+  permission: boolean;
+  connected: boolean;
+  /** Why the last connection ended, e.g. the companion is not installed. */
+  error?: string;
 }
 
 export interface ActiveContext {

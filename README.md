@@ -38,7 +38,7 @@ StorageDump is a free, open-source Chrome extension that inspects and exports ev
 - **Nothing fails silently** — `export-report.json` lists the entries written per category and every read that failed or came back short.
 - **Dashboard** — browse each category, drill into IndexedDB stores, edit or delete entries, review export history (with SHA-256 checksums).
 - **Optional masking** of keys that look like tokens, sessions or passwords.
-- **On demand only** — nothing is read until you click Scan. No server, no analytics; exports go to your Downloads folder.
+- **On demand only** — nothing is read until you click Scan (unless you turn on the optional local companion below). No server, no analytics; exports go to your Downloads folder.
 
 ## Install
 
@@ -59,6 +59,29 @@ Open `chrome://extensions`, enable **Developer mode**, click **Load unpacked** a
 2. Click the StorageDump icon → **Scan**.
 3. **Export all**, or **Open dashboard** to browse, edit and export single categories.
 
+## Local companion (optional, off by default)
+
+For people who feed exports to their own scripts: a small local program lets a script ask for a
+fresh export of a site you have open in Chrome, without clicking.
+
+```bash
+python3 companion/install.py                      # once (macOS / Linux)
+# StorageDump → Dashboard → Settings → "Turn on local companion"
+python3 ~/.storagedump/storagedump_client.py app.example.com   # prints ~/.storagedump/dumps/app.example.com
+```
+
+```python
+import os, sys; sys.path.insert(0, os.path.expanduser("~/.storagedump"))
+from storagedump_client import dump, cookie_header
+headers = {"Cookie": cookie_header("app.example.com")}
+```
+
+How it stays safe: it uses Chrome's Native Messaging, so there is no network port; Chrome starts the
+program and only the StorageDump extension may talk to it; the socket and the dump folder are readable
+by your user only; it exports only sites already open in a tab and never opens one; every request is
+listed in Export history. The `nativeMessaging` permission is optional and asked for only when you turn
+the setting on. Dumps are live session data: treat `~/.storagedump/dumps/` like a password store.
+
 ## Permissions
 
 | Permission | Why |
@@ -68,6 +91,7 @@ Open `chrome://extensions`, enable **Developer mode**, click **Load unpacked** a
 | `downloads` | Save the export to your Downloads folder |
 | `storage` | Settings and export history (metadata only) |
 | `tabs` | Find the tab you are inspecting; clear its badge when it navigates |
+| `nativeMessaging` (optional) | Only if you turn on the local companion: talk to the program you installed |
 
 Details: [Privacy policy](https://storagedump.lamma.dev/privacy) · [docs/permissions.md](docs/permissions.md) · [docs/privacy.md](docs/privacy.md)
 
@@ -115,7 +139,7 @@ Scan the site and export. localStorage values are kept exactly as stored, and In
 No. There is no StorageDump server and no analytics. Exports are written locally through the Chrome downloads API.
 
 ### Why does it need access to all sites?
-Because you can inspect any site you visit. Storage is read only when you click Scan in the popup or dashboard — never in the background.
+Because you can inspect any site you visit. Storage is read only when you click Scan in the popup or dashboard — never in the background, unless you turn on the optional local companion and one of your own scripts asks for an export.
 
 ### Is StorageDump an alternative to EditThisCookie or Get cookies.txt LOCALLY?
 Yes, for inspecting and exporting cookies — and it also covers localStorage, sessionStorage, IndexedDB, Cache Storage and service workers in the same export.

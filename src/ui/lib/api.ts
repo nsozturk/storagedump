@@ -91,7 +91,8 @@ export const extensionApi = {
     };
   },
   getExportPreview: (selection: ExportSelection): Promise<ExportManifest> => sendMessage('GET_EXPORT_PREVIEW', { selection }),
-  getDebugSnapshot: (): Promise<DebugSnapshot> => sendMessage('GET_DEBUG_SNAPSHOT', undefined)
+  getDebugSnapshot: (): Promise<DebugSnapshot> => sendMessage('GET_DEBUG_SNAPSHOT', undefined),
+  getCompanionStatus: () => sendMessage('GET_COMPANION_STATUS', undefined)
 };
 
 export type { AppSettings, CategoryDetail, ExportJobStatus, ScanResult };

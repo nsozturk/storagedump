@@ -607,6 +607,9 @@ try {
     await nav(dashboard, 'Settings');
     const labels = await dashboard.locator('.sd-panel .sd-field > span').allTextContents();
     assert(!labels.includes('Theme') && !labels.includes('Include timestamps'), `dead options still shown: ${labels}`);
+    // The companion is opt-in: off, with a way to turn it on
+    eq(await dashboard.locator('.sd-notice .sd-pill').textContent(), 'off', 'companion state');
+    await dashboard.getByRole('button', { name: 'Turn on local companion' }).waitFor();
     await dashboard.locator('.sd-field', { hasText: 'Default export format' }).locator('select').selectOption('json');
     await dashboard.getByRole('button', { name: 'Save settings' }).click();
     await waitIdle(dashboard);

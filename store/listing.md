@@ -26,7 +26,7 @@ Who it is for
 Web developers debugging their own apps, QA engineers capturing test state, and anyone checking what a site keeps after logging out or clearing consent.
 
 Privacy
-StorageDump reads a site only when you press Scan or Export; nothing is read in the background. There is no server, no account and no analytics. Exported files go only to your Downloads folder. The source code is open (MIT) on GitHub.
+StorageDump reads a site only when you press Scan or Export; nothing is read in the background. (An optional companion for your own scripts is off unless you turn it on.) There is no server, no account and no analytics. Exported files go only to your Downloads folder. The source code is open (MIT) on GitHub.
 
 > Rejected 2026-10-29 (Spam and Placement, "Yellow Argon") for listing the storage types repeatedly. Keep each storage type named once, in prose; no keyword lists.
 
