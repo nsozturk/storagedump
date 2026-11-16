@@ -1,6 +1,6 @@
 {
   "name": "storagedump-extension",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Free, open-source Chrome extension that inspects and exports cookies (incl. HttpOnly), localStorage, sessionStorage, IndexedDB, Cache Storage and service workers as lossless JSON/ZIP.",
   "license": "MIT",
   "author": "Enes Öztürk",
@@ -29,7 +29,7 @@
     "build": "tsc -b && vite build",
     "build:prod": "tsc -b && SOURCEMAP=false vite build",
     "pack": "npm run build:prod && node scripts/pack.mjs",
-    "screenshot": "node scripts/screenshot.mjs",
+    "store-assets": "npm run build:prod && node scripts/store-assets.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "npm run build && node tests/e2e/dashboard.e2e.mjs",

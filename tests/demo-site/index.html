@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Acme Notes</title>
+    <link rel="stylesheet" href="/app.css" />
+  </head>
+  <body>
+    <!-- Demo web app used only to produce store screenshots (scripts/store-assets.mjs).
+         All names, ids and tokens below are made up. -->
+    <header>Acme Notes</header>
+    <main>
+      <div class="note"><strong>Launch checklist</strong><br /><small>Edited 2 minutes ago</small></div>
+      <div class="note"><strong>Q3 roadmap</strong><br /><small>Edited yesterday</small></div>
+      <div class="note"><strong>Interview questions</strong><br /><small>Edited last week</small></div>
+    </main>
+    <p id="status" hidden>loading</p>
+    <script src="/app.js"></script>
+    <script>
+      const open = (name, upgrade) =>
+        new Promise((resolve, reject) => {
+          const request = indexedDB.open(name, 1);
+          request.onupgradeneeded = () => upgrade(request.result);
+          request.onsuccess = () => { request.result.close(); resolve(); };
+          request.onerror = () => reject(request.error);
+        });
+
+      async function seed() {
+        const ls = {
+          'acme.theme': 'dark',
+          'acme.locale': 'en-GB',
+          'acme.user': JSON.stringify({ id: 'usr_8f2c41', name: 'Sam Rivera', plan: 'team', workspace: 'design-crew' }),
+          'acme.session.token': 'demo_tok_4f9a1c7e2b8d4a6f9c0e1b2d3a4f5c6d',
+          'acme.featureFlags': JSON.stringify({ newEditor: true, aiSummaries: false, offlineSync: true }),
+          'acme.sidebar.width': '312',
+          'acme.recentNotes': JSON.stringify(['n_1042', 'n_1043', 'n_0998', 'n_0871']),
+          'acme.editor.draft:n_1042': JSON.stringify({ title: 'Launch checklist', body: '- Freeze copy\n- Final QA pass\n- Publish release notes', updatedAt: 1794850000000 }),
+          'acme.onboarding.completed': 'true',
+          'acme.analytics.anonymousId': '7213905518242650112',
+          'acme.lastSync': '2026-11-16T09:41:07.220Z',
+          'acme.shortcuts': JSON.stringify({ newNote: 'mod+n', search: 'mod+k', toggleSidebar: 'mod+\\' })
+        };
+        for (const [key, value] of Object.entries(ls)) localStorage.setItem(key, value);
+        sessionStorage.setItem('acme.scroll:/notes', '428');
+        sessionStorage.setItem('acme.search.query', 'roadmap');
+        sessionStorage.setItem('acme.tab.id', 'tab_b71e');
+        sessionStorage.setItem('acme.unsaved', JSON.stringify({ noteId: 'n_1043', dirty: true }));
+        document.cookie = 'acme_locale=en-GB; path=/; max-age=31536000; SameSite=Lax; Secure';
+        document.cookie = 'acme_consent=analytics:false|functional:true; path=/; max-age=15552000; SameSite=Lax; Secure';
+        document.cookie = 'acme_ab=editor-v2; path=/; SameSite=Lax; Secure';
+
+        const titles = ['Launch checklist', 'Q3 roadmap', 'Interview questions', 'Design review', 'Weekly sync', 'Reading list', 'Bug triage', 'Pricing ideas'];
+        await open('acme-notes', (db) => {
+          const notes = db.createObjectStore('notes', { keyPath: 'id' });
+          for (let i = 0; i < 248; i++) {
+            notes.put({ id: `n_${String(1042 - i).padStart(4, '0')}`, title: `${titles[i % titles.length]}${i >= titles.length ? ` (${Math.floor(i / titles.length) + 1})` : ''}`, words: 120 + ((i * 37) % 900), pinned: i < 3, tags: new Set(i % 2 ? ['work'] : ['work', 'planning']), updatedAt: new Date(1794850000000 - i * 5400000) });
+          }
+          const folders = db.createObjectStore('folders', { keyPath: 'id' });
+          ['Inbox', 'Projects', 'Meetings', 'Archive', 'Personal'].forEach((name, i) => folders.put({ id: `f_${i + 1}`, name, noteCount: [12, 96, 71, 58, 11][i] }));
+          const queue = db.createObjectStore('syncQueue', { autoIncrement: true });
+          queue.add({ op: 'update', noteId: 'n_1042', at: 1794850000000 });
+          queue.add({ op: 'create', noteId: 'n_1043', at: 1794850012000 });
+          queue.add({ op: 'delete', noteId: 'n_0611', at: 1794850031000 });
+        });
+        await open('acme-search-index', (db) => {
+          const terms = db.createObjectStore('terms');
+          ['roadmap', 'launch', 'checklist', 'design', 'review', 'pricing', 'sync', 'triage', 'interview'].forEach((t, i) => terms.put(new Map([['docs', 3 + i], ['weight', 0.4 + i / 20]]), t));
+          db.createObjectStore('meta').put({ version: 7, builtAt: new Date(1794849000000) }, 'index');
+        });
+        const registration = await navigator.serviceWorker.register('/sw.js');
+        await navigator.serviceWorker.ready;
+        for (let i = 0; i < 40 && !(await caches.has('acme-notes-shell-v7')); i++) await new Promise((r) => setTimeout(r, 100));
+        const media = await caches.open('acme-notes-media');
+        await media.put('/media/cover-roadmap.bin', new Response(new Uint8Array(2048), { headers: { 'content-type': 'image/webp', 'content-length': '2048' } }));
+        await media.put('/media/avatar-sam.bin', new Response(new Uint8Array(912), { headers: { 'content-type': 'image/png', 'content-length': '912' } }));
+        return registration.scope;
+      }
+      seed().then(
+        () => { document.getElementById('status').textContent = 'ready'; },
+        (error) => { document.getElementById('status').textContent = `failed: ${error.message}`; }
+      );
+    </script>
+  </body>
+</html>

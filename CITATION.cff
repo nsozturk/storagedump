@@ -6,7 +6,7 @@ type: software
 authors:
   - given-names: "Enes"
     family-names: "Öztürk"
-version: "0.2.1"
+version: "0.2.2"
 license: MIT
 repository-code: "https://github.com/nsozturk/storagedump"
 url: "https://nsozturk.github.io/storagedump/"

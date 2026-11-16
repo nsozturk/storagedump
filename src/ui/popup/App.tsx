@@ -179,7 +179,10 @@ export function PopupApp() {
                     </div>
                   ) : null}
                 </div>
-                <StatusPill value={exportJob.state === 'completed' ? 'readable' : exportJob.state === 'failed' ? 'failed' : 'partial'} />
+                {/* Own label: the access-state pill said "readable" for a finished export. */}
+                <span className={`sd-pill ${exportJob.state === 'completed' ? 'readable' : exportJob.state === 'failed' ? 'failed' : 'partial'}`}>
+                  {exportJob.state === 'completed' ? 'done' : exportJob.state}
+                </span>
               </div>
               <div style={{ marginTop: 12, height: 10, borderRadius: 999, background: 'rgba(148,163,184,0.12)' }}>
                 <div

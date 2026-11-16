@@ -1,6 +1,6 @@
 ========================================
 CHROME WEB STORE - COPY-PASTE TEXTS
-StorageDump v0.2.1
+StorageDump v0.2.2
 ========================================
 Bu dosyadaki tüm metinler CWS form alanlarına doğrudan yapıştırılabilir.
 Markdown yok, sadece düz metin.

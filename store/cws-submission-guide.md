@@ -56,16 +56,22 @@ Paste the full text from `store/listing.md` (the "Detailed Description" section)
 ### Language
 **English**
 
-### Screenshots (required: at least 1)
-Upload your screenshots from `store/screenshots/` (1280×800 or 640×400).
-Recommended order:
-1. `1-popup.png` — popup with storage categories
-2. `4-dashboard.png` — full dashboard view
-3. `2-popup-export.png` — export in progress
-4. `3-site-badge.png` — badge on browser icon
+### Screenshots, promo tiles (generated)
+`npm run store-assets` builds the extension, runs it against the made-up demo site in
+`tests/demo-site` and writes 24-bit PNGs (no alpha):
 
-### Small promo tile (optional, 440×280)
-Open `store/promo-tile.html` in Chrome (zoom 100%), take a screenshot, crop to 440×280.
+| File | Size | Store field |
+|---|---|---|
+| `store/screenshots/01-scan.png` … `05-export.png` | 1280×800 | Screenshots, in this order |
+| `store/promo-small-440x280.png` | 440×280 | Small promo tile |
+| `store/promo-marquee-1400x560.png` | 1400×560 | Marquee promo tile |
+
+Regenerate after any UI change so the listing shows the current product. Captures of older versions
+are kept in `store/screenshots/archive-0.2.0/`.
+
+### Promo video (optional)
+Leave the YouTube URL field empty unless a video of the current UI exists; an outdated video is
+worse than none.
 
 ---
 

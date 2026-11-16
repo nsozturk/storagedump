@@ -10,7 +10,7 @@
 // layout shift plus a per-frame position sampler on the shell elements while
 // the user switches views, refreshes and mutates.
 
-import { createReadStream, existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { createReadStream, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import http from 'node:http';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -433,7 +433,7 @@ try {
     }
     eq(status.state, 'completed', `job state (${status.error ?? ''})`);
     eq(status.manifest.partial, false, 'manifest partial');
-    eq(status.manifest.version, '0.2.1', 'manifest version');
+    eq(status.manifest.version, JSON.parse(readFileSync(path.join(ROOT, 'public', 'manifest.json'), 'utf8')).version, 'manifest version');
   });
 
   await test('export: cache payload has JS text and base64 binary body', dashboard, async () => {
