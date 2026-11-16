@@ -150,7 +150,9 @@ async function getActiveContext(sender?: chrome.runtime.MessageSender): Promise<
         };
       }
     } catch {
-      // Fallback to current active context if the original tab no longer exists.
+      // Never fall back to some other tab: the dashboard would silently show
+      // (and export) a different site than the one in its header.
+      throw new Error('The inspected tab was closed. Open the site again and start StorageDump from there.');
     }
   }
 

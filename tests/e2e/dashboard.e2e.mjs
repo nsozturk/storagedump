@@ -254,7 +254,8 @@ try {
   await test('local storage: every key once, raw values preserved', dashboard, async () => {
     await nav(dashboard, 'Local Storage');
     const keys = await dashboard.locator('.sd-table tbody tr td:first-child').allTextContents();
-    eq(keys.sort(), ['fixture:bignum', 'fixture:local', 'fixture:quoted'], 'table keys (iframe must not duplicate)');
+    eq(keys.filter((k) => !k.includes('long-key')).sort(), ['fixture:bignum', 'fixture:local', 'fixture:quoted'], 'table keys (iframe must not duplicate)');
+    eq(keys.length, 4, 'key count');
     const exported = await send(dashboard, 'LOAD_CATEGORY_DETAIL', { categoryId: 'local' });
     const byKey = Object.fromEntries(exported.entries.map((e) => [e.key, e.value]));
     eq(byKey['fixture:bignum'], '7123456789012345678', 'bignum kept as raw string');
@@ -276,7 +277,7 @@ try {
   await test('indexeddb: database list, store drill-down, rows', dashboard, async () => {
     await nav(dashboard, 'IndexedDB');
     const stores = await dashboard.locator('.sd-content .sd-category strong').allTextContents();
-    eq(stores.sort(), ['EdgeDB.numbered', 'EdgeDB.values', 'FixtureDB.profiles'], 'stores');
+    eq(stores.sort(), ['EdgeDB.many', 'EdgeDB.numbered', 'EdgeDB.values', 'FixtureDB.profiles'], 'stores');
     const titleColor = await dashboard.locator('.sd-content .sd-category strong').first().evaluate((el) => getComputedStyle(el).color);
     assert(titleColor !== 'rgb(0, 0, 0)', `store titles are unreadable (${titleColor} on dark panel)`);
     await dashboard.locator('.sd-content .sd-category', { hasText: 'FixtureDB.profiles' }).click();
@@ -312,6 +313,55 @@ try {
     await nav(dashboard, 'Extension Storage');
     const keys = await dashboard.locator('.sd-table tbody tr td:first-child').allTextContents();
     assert(keys.includes('storagedump.settings'), `keys: ${keys}`);
+  });
+
+  // ── Table behaviour ──
+  await test('table: long keys/values keep the panel inside the viewport', dashboard, async () => {
+    await nav(dashboard, 'Local Storage');
+    const viewport = dashboard.viewportSize().width;
+    for (const name of ['Export only this', 'Refresh']) {
+      const box = await dashboard.locator('.sd-content .sd-panel-head').getByRole('button', { name }).boundingBox();
+      assert(box && box.x + box.width <= viewport, `"${name}" button is off screen (right edge ${box && Math.round(box.x + box.width)} > ${viewport})`);
+    }
+    const del = await dashboard.locator('.sd-table tbody tr').first().getByRole('button', { name: 'Delete' }).boundingBox();
+    assert(del && del.x + del.width <= viewport, 'Delete column is off screen');
+  });
+
+  await test('table: sidebar stays visible when a long table scrolls', dashboard, async () => {
+    await nav(dashboard, 'IndexedDB');
+    await dashboard.locator('.sd-content .sd-category', { hasText: 'EdgeDB.many' }).click();
+    await waitIdle(dashboard);
+    await dashboard.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    const top = await dashboard.locator('.sd-sidebar .sd-nav-item').first().evaluate((el) => el.getBoundingClientRect().top);
+    assert(top >= 0 && top < 400, `sidebar scrolled away (first item at ${Math.round(top)}px)`);
+    await dashboard.evaluate(() => window.scrollTo(0, 0));
+  });
+
+  await test('table: page limit is announced and "Load all" shows every record', dashboard, async () => {
+    const rows = dashboard.locator('.sd-table tbody tr.sd-row');
+    eq(await rows.count(), 100, 'rows on first page');
+    await dashboard.getByText('Showing the first 100 of 150 entries').waitFor();
+    await dashboard.getByRole('button', { name: 'Load all' }).click();
+    await waitIdle(dashboard);
+    await dashboard.waitForFunction(() => document.querySelectorAll('.sd-table tbody tr.sd-row').length === 150);
+    eq(await dashboard.getByRole('button', { name: 'Load all' }).count(), 0, 'Load all after loading');
+  });
+
+  await test('table: filter narrows rows, row click shows the full value', dashboard, async () => {
+    await dashboard.locator('.sd-filter').fill('row-14');
+    eq(await dashboard.locator('.sd-table tbody tr.sd-row').count(), 10, 'filtered rows (row-140..149)');
+    await dashboard.locator('.sd-filter').fill('row-007');
+    await dashboard.locator('.sd-table tbody tr.sd-row').first().click();
+    eq((await dashboard.locator('.sd-detail-value').textContent()).replace(/\s+/g, ''), '{"i":7}', 'full value');
+    await dashboard.locator('.sd-filter').fill('no-such-entry');
+    await dashboard.getByText('Nothing matches').waitFor();
+  });
+
+  await test('indexeddb: open store is named and "All stores" goes back', dashboard, async () => {
+    eq(await dashboard.locator('.sd-crumbs strong').textContent(), 'EdgeDB.many', 'open store name');
+    await dashboard.getByRole('button', { name: '← All stores' }).click();
+    await waitIdle(dashboard);
+    eq(await dashboard.locator('.sd-content button.sd-category').count(), 4, 'store cards');
   });
 
   // ── Mutations ──
@@ -495,6 +545,15 @@ try {
     eq(await errorBanner(dashboard), 0, 'error banners');
     await dashboard.getByText('This tab URL cannot be scripted by the extension.').first().waitFor();
     await restricted.close();
+  });
+  await test('closed tab: dashboard reports it instead of showing another site', dashboard, async () => {
+    const victim = await context.newPage();
+    await victim.goto(fixtureUrl.replace('index.html', 'cached.json'));
+    const victimId = await worker.evaluate(async (u) => (await chrome.tabs.query({ url: u }))[0].id, victim.url());
+    await victim.close();
+    await dashboard.goto(`chrome-extension://${extensionId}/dashboard.html?sourceTabId=${victimId}`);
+    await dashboard.locator('.sd-content > .sd-banner', { hasText: 'The inspected tab was closed' }).waitFor();
+    eq(await dashboard.locator('.sd-topbar .sd-subtle').first().textContent(), 'No active origin loaded', 'origin shown');
   });
 } finally {
   await context.close();

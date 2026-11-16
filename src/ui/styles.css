@@ -52,6 +52,13 @@ a {
   backdrop-filter: blur(18px);
 }
 
+.sd-shell > .sd-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: rgba(7, 12, 20, 0.96);
+}
+
 .sd-topbar,
 .sd-footer {
   display: flex;
@@ -103,6 +110,13 @@ a {
 
 .sd-sidebar {
   width: 280px;
+  flex-shrink: 0;
+  /* Stays in view while a long table scrolls (79px = top bar height). */
+  position: sticky;
+  top: 79px;
+  align-self: flex-start;
+  height: calc(100vh - 79px);
+  overflow-y: auto;
   padding: 24px 20px;
   border-right: 1px solid rgba(148, 163, 184, 0.12);
   background: rgba(7, 12, 20, 0.55);
@@ -132,8 +146,10 @@ a {
 
 .sd-content {
   flex: 1;
+  /* A flex item defaults to min-width:auto, so a wide table used to stretch the
+     whole panel past the viewport and push its buttons off screen. */
+  min-width: 0;
   padding: 24px;
-  overflow: auto;
 }
 
 .sd-grid {
@@ -307,6 +323,134 @@ a {
 .sd-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.sd-col-key {
+  width: 28%;
+}
+
+.sd-col-size {
+  width: 96px;
+}
+
+.sd-col-meta {
+  width: 22%;
+}
+
+.sd-col-action {
+  width: 104px;
+}
+
+.sd-cell-clip {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sd-nowrap {
+  white-space: nowrap;
+}
+
+.sd-row {
+  cursor: pointer;
+}
+
+.sd-row:hover,
+.sd-row.is-open {
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.sd-row-detail td {
+  background: rgba(2, 6, 23, 0.45);
+}
+
+.sd-detail-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  overflow-wrap: anywhere;
+}
+
+.sd-detail-value,
+.sd-detail-meta {
+  margin: 0;
+  max-height: 320px;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.sd-detail-meta {
+  margin-top: 10px;
+  color: #94a3b8;
+}
+
+.sd-table-tools {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.sd-filter {
+  flex: 1;
+  min-width: 0;
+  border-radius: 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(15, 23, 42, 0.86);
+  color: #e2e8f0;
+  font: inherit;
+}
+
+.sd-table-count {
+  white-space: nowrap;
+}
+
+.sd-truncated {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.sd-crumbs {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  overflow-wrap: anywhere;
+}
+
+.sd-panel-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.sd-panel-head > :first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.sd-panel-head .sd-actions {
+  flex-shrink: 0;
+  flex-wrap: nowrap;
+}
+
+select {
+  border-radius: 10px;
+  padding: 8px 10px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(15, 23, 42, 0.86);
+  color: #e2e8f0;
+  font: inherit;
 }
 
 .sd-table th,
@@ -403,6 +547,8 @@ a {
 
   .sd-sidebar {
     width: 100%;
+    position: static;
+    height: auto;
     border-right: none;
     border-bottom: 1px solid rgba(148, 163, 184, 0.12);
   }

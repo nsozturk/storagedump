@@ -65,7 +65,8 @@ export function DashboardApp() {
       count: categories.filter((category) => category.detected).length,
       items: categories.reduce((sum, category) => sum + (category.itemCount ?? 0), 0),
       size: categories.reduce((sum, category) => sum + (category.estimatedSizeBytes ?? 0), 0),
-      warnings: categories.reduce((sum, category) => sum + category.warnings.length, 0)
+      // Notes such as "2 HttpOnly cookies included" are not problems; count only reads that fell short.
+      warnings: categories.filter((category) => ['partial', 'failed', 'restricted'].includes(category.accessState)).length
     };
   }, [scan]);
 
@@ -296,6 +297,8 @@ export function DashboardApp() {
                 }
                 onMutate={applyMutation}
                 onLoadStore={(dbName, storeName) => void loadDetail('indexeddb', { dbName, storeName })}
+                onBackToStores={() => void loadDetail('indexeddb')}
+                onLoadAll={() => void loadDetail(detail.id, { ...detailTarget(detail), limit: Number.MAX_SAFE_INTEGER })}
                 onExport={() => void runExportSelected([detail.id])}
               />
             ) : null}
@@ -343,7 +346,7 @@ function OverviewPanel({
         <MetricCard label="Detected categories" value={formatNumber(stats.count)} helper={scan?.siteTitle ?? 'Site snapshot'} />
         <MetricCard label="Total items" value={formatNumber(stats.items)} helper={scan?.scannedAt ? formatRelativeTime(scan.scannedAt) : 'Not scanned'} />
         <MetricCard label="Estimated payload" value={formatBytes(stats.size)} helper="Readable storage only" />
-        <MetricCard label="Warnings" value={formatNumber(stats.warnings)} helper="Restrictions and partial reads" />
+        <MetricCard label="Problems" value={formatNumber(stats.warnings)} helper="Restricted, partial or failed reads" />
       </div>
 
       <div className="sd-two-col">
@@ -400,6 +403,8 @@ function CategoryPanel({
   onDelete,
   onMutate,
   onLoadStore,
+  onBackToStores,
+  onLoadAll,
   onExport
 }: {
   detail: CategoryDetail;
@@ -408,14 +413,17 @@ function CategoryPanel({
   onDelete: (key: string) => void;
   onMutate: (action: Parameters<typeof extensionApi.runMutation>[1]) => Promise<void>;
   onLoadStore: (dbName: string, storeName: string) => void;
+  onBackToStores: () => void;
+  onLoadAll: () => void;
   onExport: () => void;
 }) {
   const storeEntries = detail.id === 'indexeddb' && detail.previewMode === 'tree' ? detail.entries : [];
+  const openStore = detail.id === 'indexeddb' && detail.metadata?.storeName ? `${String(detail.metadata.dbName)}.${String(detail.metadata.storeName)}` : null;
 
   return (
     <div className="sd-grid">
       <div className="sd-panel">
-        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', marginBottom: 16 }}>
+        <div className="sd-panel-head">
           <div>
             <strong style={{ fontSize: 22 }}>{detail.summary.label}</strong>
             <div className="sd-subtle" style={{ marginTop: 6 }}>{detail.summary.warnings.join(' ') || 'No category warnings.'}</div>
@@ -426,6 +434,16 @@ function CategoryPanel({
             <button className="sd-button primary" onClick={onExport} disabled={busy}>Export only this</button>
           </div>
         </div>
+
+        {openStore ? (
+          <div className="sd-crumbs">
+            <button className="sd-button" onClick={onBackToStores} disabled={busy}>
+              ← All stores
+            </button>
+            <strong className="sd-code">{openStore}</strong>
+            <span className="sd-subtle">{formatNumber(Number(detail.metadata?.totalCount ?? detail.entries.length))} records</span>
+          </div>
+        ) : null}
 
         {storeEntries.length > 0 ? (
           <div className="sd-grid cols-2" style={{ marginBottom: 18 }}>
@@ -439,7 +457,12 @@ function CategoryPanel({
             ))}
           </div>
         ) : (
-          <DataTable detail={detail} onDelete={detail.summary.mutationCapabilities.includes('delete') ? onDelete : undefined} />
+          <DataTable
+            key={`${detail.id}:${openStore ?? ''}`}
+            detail={detail}
+            onDelete={detail.summary.mutationCapabilities.includes('delete') ? onDelete : undefined}
+            onLoadAll={detail.truncated ? onLoadAll : undefined}
+          />
         )}
       </div>
 
@@ -549,7 +572,7 @@ function MetricCard({ label, value, helper }: { label: string; value: string; he
     <div className="sd-panel">
       <div className="sd-subtle">{label}</div>
       <div style={{ fontSize: 32, fontWeight: 900, margin: '8px 0' }}>{value}</div>
-      <div className="sd-subtle">{helper}</div>
+      <div className="sd-subtle sd-cell-clip" title={helper}>{helper}</div>
     </div>
   );
 }

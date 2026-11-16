@@ -495,7 +495,7 @@ async function scanCacheStorage(): Promise<CategorySummary> {
 
   let itemCount = 0;
   let estimatedSizeBytes = 0;
-  const warnings: string[] = [];
+  let unknownSizes = 0;
 
   for (const cacheName of cacheNames) {
     const cache = await caches.open(cacheName);
@@ -508,18 +508,20 @@ async function scanCacheStorage(): Promise<CategorySummary> {
       if (contentLength) {
         estimatedSizeBytes += Number(contentLength);
       } else {
-        warnings.push(`Approximate size for ${request.url} could not be determined.`);
+        unknownSizes += 1;
       }
     }
   }
 
+  // A response without a Content-Length header is still fully readable: one
+  // note about the size estimate, not a warning per file and not "partial".
   return makeSummary({
     id: 'cache',
-    accessState: warnings.length > 0 ? 'partial' : 'readable',
+    accessState: 'readable',
     detected: true,
     itemCount,
     estimatedSizeBytes: estimatedSizeBytes || undefined,
-    warnings,
+    warnings: unknownSizes > 0 ? [`Size is an estimate: ${unknownSizes} cached responses report no length.`] : [],
     mutationCapabilities: []
   });
 }
@@ -574,9 +576,10 @@ async function inspectCacheStorage(target?: CategoryDetailTarget): Promise<Categ
     summary,
     previewMode: 'table',
     entries,
-    truncated: entries.length >= limit,
+    truncated: (summary.itemCount ?? 0) > entries.length,
     metadata: {
-      cacheNames
+      cacheNames,
+      totalCount: summary.itemCount
     }
   };
 }

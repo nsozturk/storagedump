@@ -63,6 +63,8 @@
       async function seedEdgeCases() {
         localStorage.setItem('fixture:bignum', '7123456789012345678');
         localStorage.setItem('fixture:quoted', '"quoted"');
+        // Long unbroken key and value: must not stretch the table past the viewport.
+        localStorage.setItem('fixture:' + 'long-key-'.repeat(30), 'v'.repeat(3000));
         // about:blank frames share this origin's storage; they must not duplicate entries.
         document.body.append(Object.assign(document.createElement('iframe'), { hidden: true }));
 
@@ -80,6 +82,9 @@
             const numbered = request.result.createObjectStore('numbered', { autoIncrement: true });
             numbered.add({ n: 1 });
             numbered.add({ n: 2 });
+            // More rows than one dashboard page (100): the table must say so and offer the rest.
+            const many = request.result.createObjectStore('many');
+            for (let i = 0; i < 150; i++) many.put({ i }, `row-${String(i).padStart(3, '0')}`);
           };
           request.onsuccess = () => {
             request.result.close();

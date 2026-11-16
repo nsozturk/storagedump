@@ -41,7 +41,8 @@ export function CategoryList({
           <div style={{ textAlign: 'left' }}>
             <strong>{category.label}</strong>
             <div className="sd-subtle sd-code">
-              {formatNumber(category.itemCount)} items • {formatBytes(category.estimatedSizeBytes)}
+              {formatNumber(category.itemCount)} {category.itemCount === 1 ? 'item' : 'items'}
+              {category.estimatedSizeBytes == null ? '' : ` • ${formatBytes(category.estimatedSizeBytes)}`}
             </div>
             {category.warnings[0] ? <div className="sd-subtle" style={{ marginTop: 8 }}>{category.warnings[0]}</div> : null}
           </div>
