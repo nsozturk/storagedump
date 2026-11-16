@@ -49,3 +49,5 @@ cookies, localStorage, sessionStorage, IndexedDB, Cache Storage and service work
 ## Do not
 - Do not add telemetry, remote calls or a server.
 - Do not submit to the Chrome Web Store or push without the maintainer's explicit go-ahead.
+- After an important feature: bump the version, `sh scripts/release-assets.sh`, then tag and create the GitHub
+  release with the files it built (zip, crx, companion zip, SHA256SUMS.txt).

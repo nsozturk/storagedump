@@ -63,6 +63,8 @@ Generated from the real extension against a made-up demo site: `npm run store-as
 
 **Chrome Web Store:** [StorageDump](https://chromewebstore.google.com/detail/storagedump/kihoghfekemdccfnpjefmggehpgnjnab)
 
+**GitHub release:** [latest release](https://github.com/nsozturk/storagedump/releases/latest) has the same package as a `.zip` (Load unpacked), a signed `.crx`, the companion scripts and checksums.
+
 **From source:**
 
 ```bash
