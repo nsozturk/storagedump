@@ -32,3 +32,7 @@ Click the toolbar icon, press Scan, then Export all or Open dashboard.
 - [Permissions](https://github.com/nsozturk/storagedump/blob/main/docs/permissions.md): why each permission is needed
 - [Releases](https://github.com/nsozturk/storagedump/releases): version history
 - [Website](https://storagedump.lamma.dev)
+
+## Since 0.3.0
+- Exports include `for-scripts/` (Cookie header, cookies.txt, curl, Playwright storage state) and `export-report.json`.
+- Optional local companion (off by default): `python3 ~/.storagedump/storagedump_client.py <host>` returns a fresh export folder.

@@ -135,6 +135,11 @@
     main.content { flex: 1; min-width: 0; padding: 40px 56px; max-width: 960px; }
     .banner-hero { width: 100%; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 32px; overflow: hidden; }
     .banner-hero img { width: 100%; height: auto; display: block; }
+    .shot-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .shot-grid a { display: block; border-radius: 12px; border: 1px solid var(--border); overflow: hidden; }
+    .shot-grid .shot-wide { grid-column: 1 / -1; }
+    .shot-grid img { width: 100%; height: auto; display: block; }
+    @media (max-width: 720px) { .shot-grid { grid-template-columns: 1fr; } }
     h1 { font-size: 2.3rem; font-weight: 800; margin-bottom: 12px; letter-spacing: -0.02em; line-height: 1.2; }
     h2 { font-size: 1.6rem; font-weight: 700; margin: 8px 0 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
     h3 { font-size: 1.1rem; font-weight: 600; margin: 22px 0 8px; }
@@ -200,6 +205,7 @@
         <a href="#overview" class="nav-menu-item active">Overview</a>
         <a href="#install" class="nav-menu-item">Install</a>
         <a href="#usage" class="nav-menu-item">Usage</a>
+        <a href="#screenshots" class="nav-menu-item">Screenshots</a>
         <a href="#features" class="nav-menu-item">Features</a>
         <a href="#privacy" class="nav-menu-item">Privacy &amp; Permissions</a>
         <a href="#development" class="nav-menu-item">Development &amp; Testing</a>
@@ -245,6 +251,18 @@ npm run build</code></pre>
         </ol>
       </section>
 
+      <section id="screenshots" data-nav>
+        <h2>Screenshots</h2>
+        <p>Captured from the real extension running against a made-up demo site.</p>
+        <div class="shot-grid">
+          <a class="shot-wide" href="assets/screenshots/02-dashboard.png"><img src="assets/screenshots/02-dashboard.png" width="1280" height="800" alt="StorageDump dashboard: counts, sizes and read status for every storage type of a site"></a>
+          <a href="assets/screenshots/01-scan.png"><img loading="lazy" src="assets/screenshots/01-scan.png" width="1280" height="800" alt="StorageDump popup after a scan, listing the storage categories of the current site"></a>
+          <a href="assets/screenshots/03-cookies.png"><img loading="lazy" src="assets/screenshots/03-cookies.png" width="1280" height="800" alt="Cookie table with an HttpOnly cookie expanded to its full value and flags"></a>
+          <a href="assets/screenshots/04-records.png"><img loading="lazy" src="assets/screenshots/04-records.png" width="1280" height="800" alt="An IndexedDB store filtered to matching records, with one record opened"></a>
+          <a href="assets/screenshots/05-export.png"><img loading="lazy" src="assets/screenshots/05-export.png" width="1280" height="800" alt="Finished export and the files inside it, including the script-ready files"></a>
+        </div>
+      </section>
+
       <section id="features" data-nav>
         <h2>Features</h2>
         <div class="feature-grid">
@@ -255,7 +273,11 @@ npm run build</code></pre>
           <div class="feature-card"><h3>JSON or ZIP export</h3><p>ZIP includes a manifest, splits large files, and can optionally mask sensitive values.</p></div>
           <div class="feature-card"><h3>Mutation console</h3><p>Edit or delete individual entries directly from the dashboard.</p></div>
           <div class="feature-card"><h3>Export history</h3><p>Every export is logged with a SHA-256 checksum so you can verify files later.</p></div>
-          <div class="feature-card"><h3>On-demand only</h3><p>Nothing is read in the background. No server, no analytics. Files go to Downloads.</p></div>
+          <div class="feature-card"><h3>Script-ready files</h3><p>Every export adds <code>for-scripts/</code>: a Cookie header, Netscape <code>cookies.txt</code>, a curl line and a Playwright storage state.</p></div>
+          <div class="feature-card"><h3>Folder format</h3><p>Unzipped files at <code>Downloads/storagedump/&lt;site&gt;/</code>, replaced on every export, so scripts always read one path.</p></div>
+          <div class="feature-card"><h3>Export report</h3><p><code>export-report.json</code> lists what was written and every read that failed or came back short.</p></div>
+          <div class="feature-card"><h3>Local companion (optional)</h3><p>Off by default. A small local program lets your own scripts request an export of an open site through Chrome Native Messaging; no network port.</p></div>
+          <div class="feature-card"><h3>On-demand only</h3><p>Nothing is read in the background unless you turn on the optional companion. No server, no analytics. Files go to Downloads.</p></div>
         </div>
       </section>
 

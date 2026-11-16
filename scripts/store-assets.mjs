@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Generates the Chrome Web Store images from the real built extension:
 //
-//   store/screenshots/01..05-*.png   1280x800 screenshots
+//   docs/assets/screenshots/01..05-*.png  1280x800 screenshots (README, docs portal, Store)
 //   store/promo-small-440x280.png    small promo tile
 //   store/promo-marquee-1400x560.png marquee promo tile
 //
@@ -25,7 +25,8 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = path.join(ROOT, 'dist');
 const SITE_DIR = path.join(ROOT, 'tests', 'demo-site');
 const OUT = path.join(ROOT, 'store');
-const SHOTS = path.join(OUT, 'screenshots');
+// One copy for the README, the docs portal (served from docs/) and the Store upload
+const SHOTS = path.join(ROOT, 'docs', 'assets', 'screenshots');
 const HOST = 'notes.acme.example';
 const VERSION = JSON.parse(readFileSync(path.join(ROOT, 'public', 'manifest.json'), 'utf8')).version;
 
@@ -188,32 +189,32 @@ try {
     </body>`;
 
   const tiles = {
-    'screenshots/01-scan.png': [1280, 800, side({
+    '../docs/assets/screenshots/01-scan.png': [1280, 800, side({
       eyebrow: `Chrome extension · v${VERSION}`,
       title: 'Everything a site stores, in one scan.',
       text: 'Open a site, press Scan and see what it keeps in your browser. Nothing is read until you click, and nothing leaves your device.',
       image: raw.popup,
       extra: '<div class="chips"><span class="chip">No account</span><span class="chip">No server</span><span class="chip">Open source</span></div>'
     })],
-    'screenshots/02-dashboard.png': [1280, 800, wide({
+    '../docs/assets/screenshots/02-dashboard.png': [1280, 800, wide({
       eyebrow: 'Dashboard',
       title: 'One dashboard for all of a site’s data.',
       text: 'Counts, sizes and read status for every storage type, side by side.',
       image: raw.overview
     })],
-    'screenshots/03-cookies.png': [1280, 800, wide({
+    '../docs/assets/screenshots/03-cookies.png': [1280, 800, wide({
       eyebrow: 'Cookies',
       title: 'Every cookie, including the ones scripts can’t read.',
       text: 'HttpOnly and partitioned cookies on every path, with all their flags.',
       image: raw.cookies
     })],
-    'screenshots/04-records.png': [1280, 800, wide({
+    '../docs/assets/screenshots/04-records.png': [1280, 800, wide({
       eyebrow: 'IndexedDB',
       title: 'Open any record. Filter, copy, edit or delete.',
       text: 'Drill into a database, find an entry and read its full value.',
       image: raw.indexeddb
     })],
-    'screenshots/05-export.png': [1280, 800, side({
+    '../docs/assets/screenshots/05-export.png': [1280, 800, side({
       eyebrow: 'Export',
       title: 'One click to a ZIP or JSON, exactly as stored.',
       text: 'One file per storage type, a report of anything that could not be read, and files your scripts can use as they are.',

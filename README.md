@@ -22,6 +22,25 @@ StorageDump is a free, open-source Chrome extension that inspects and exports ev
 
 **[Install from the Chrome Web Store](https://chromewebstore.google.com/detail/storagedump/kihoghfekemdccfnpjefmggehpgnjnab)** · [Docs](https://nsozturk.github.io/storagedump/) · [Website](https://storagedump.lamma.dev)
 
+## Screenshots
+
+<p align="center">
+  <img src="docs/assets/screenshots/02-dashboard.png" alt="StorageDump dashboard: counts, sizes and read status for every storage type of a site" width="100%">
+</p>
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/assets/screenshots/01-scan.png" alt="StorageDump popup after a scan, listing the storage categories of the current site" width="100%"></td>
+    <td width="50%"><img src="docs/assets/screenshots/03-cookies.png" alt="Cookie table with an HttpOnly cookie expanded to its full value and flags" width="100%"></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/assets/screenshots/04-records.png" alt="An IndexedDB store filtered to matching records, with one record opened" width="100%"></td>
+    <td width="50%"><img src="docs/assets/screenshots/05-export.png" alt="Finished export and the files inside it, including the script-ready files" width="100%"></td>
+  </tr>
+</table>
+
+Generated from the real extension against a made-up demo site: `npm run store-assets`.
+
 ## What it does
 
 | Storage | What you get |

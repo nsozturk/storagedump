@@ -6,6 +6,10 @@
 - One panel for cookies, localStorage, sessionStorage, IndexedDB, Cache Storage, service workers and extension storage.
 - Exports to JSON or ZIP (manifest + per-category files); nothing is read until you click Scan; no server.
 
+## Since 0.3.0
+- Exports include `for-scripts/` (Cookie header, cookies.txt, curl, Playwright storage state) and `export-report.json`.
+- Optional local companion (off by default): `python3 ~/.storagedump/storagedump_client.py <host>` returns a fresh export folder.
+
 ## Install
 - Chrome Web Store: https://chromewebstore.google.com/detail/storagedump/kihoghfekemdccfnpjefmggehpgnjnab
 - From source: `npm install && npm run build`, then load `dist/` unpacked in chrome://extensions.

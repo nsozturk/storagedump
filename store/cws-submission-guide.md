@@ -11,7 +11,7 @@ Before uploading, confirm these are done:
 - [ ] `npm run build:prod` — clean production build in `dist/`
 - [ ] `npm run pack` — creates `storagedump.zip` (the file you upload)
 - [ ] Privacy policy is hosted at a public URL (see §5)
-- [ ] At least 1 screenshot (1280×800) ready in `store/screenshots/`
+- [ ] Screenshots regenerated (`npm run store-assets`) in `docs/assets/screenshots/`
 - [ ] Extension loads and works correctly in Chrome with "Load unpacked"
 
 ---
@@ -62,7 +62,7 @@ Paste the full text from `store/listing.md` (the "Detailed Description" section)
 
 | File | Size | Store field |
 |---|---|---|
-| `store/screenshots/01-scan.png` … `05-export.png` | 1280×800 | Screenshots, in this order |
+| `docs/assets/screenshots/01-scan.png` … `05-export.png` | 1280×800 | Screenshots, in this order (also shown in the README and the docs portal) |
 | `store/promo-small-440x280.png` | 440×280 | Small promo tile |
 | `store/promo-marquee-1400x560.png` | 1400×560 | Marquee promo tile |
 
