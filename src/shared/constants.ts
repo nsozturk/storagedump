@@ -21,6 +21,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   splitThresholdBytes: 1024 * 1024 * 2,
   skipBinaryBodies: true,
   maskSensitiveValues: false,
+  scriptFormats: true,
   autoScanOnOpen: true,
   retainExportHistory: true,
   theme: 'dark',
@@ -31,3 +32,6 @@ export const HISTORY_STORAGE_KEY = 'storagedump.history';
 export const SETTINGS_STORAGE_KEY = 'storagedump.settings';
 export const MAX_HISTORY_ITEMS = 20;
 export const DEFAULT_DETAIL_LIMIT = 100;
+// Bump whenever src/runtime/inpage.ts changes behaviour. A tab that was open during an
+// extension update still holds the old bridge; a mismatch makes the background replace it.
+export const BRIDGE_VERSION = '3';

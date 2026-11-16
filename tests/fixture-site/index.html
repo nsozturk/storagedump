@@ -78,6 +78,8 @@
             store.put(new Set([1, 2]), 'set');
             store.put(10n, 'bigint');
             store.put(cyclic, 'cycle');
+            // Binary values are exported as type/size only; the report must say so.
+            store.put(new Uint8Array([1, 2, 3]).buffer, 'binary');
             // Numeric (autoIncrement) keys: the row Delete must not stringify them.
             const numbered = request.result.createObjectStore('numbered', { autoIncrement: true });
             numbered.add({ n: 1 });

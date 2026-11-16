@@ -108,6 +108,7 @@ try {
   await popup.goto(`chrome-extension://${extensionId}/popup.html`);
   await popup.getByText('Local Storage').waitFor();
   await idle(popup);
+  await popup.getByRole('button', { name: "Close what's new" }).click();
   await shot(popup, 'popup');
   await popup.getByRole('button', { name: 'Export all' }).click();
   await popup.getByText('Export completed').waitFor({ timeout: 20000 });
@@ -215,10 +216,10 @@ try {
     'screenshots/05-export.png': [1280, 800, side({
       eyebrow: 'Export',
       title: 'One click to a ZIP or JSON, exactly as stored.',
-      text: 'A manifest plus one file per storage type, saved to your Downloads folder.',
+      text: 'One file per storage type, a report of anything that could not be read, and files your scripts can use as they are.',
       image: raw.popupExported,
-      extra: `<div class="frame files" style="padding:18px 24px;max-width:520px"><b>storagedump_${HOST}.zip</b><br>
-        ├─ manifest.json <span>what was exported</span><br>├─ cookies.json<br>├─ local.json · session.json<br>├─ indexeddb.json<br>├─ cache.json<br>└─ serviceWorkers.json</div>`
+      extra: `<div class="frame files" style="padding:18px 24px;max-width:540px;white-space:nowrap"><b>storagedump_${HOST}.zip</b><br>
+        ├─ manifest.json · export-report.json<br>├─ cookies.json · local.json · session.json<br>├─ indexeddb.json · cache.json<br>└─ for-scripts/ <span>ready to use</span><br>&nbsp;&nbsp;&nbsp;├─ cookie-header.txt · cookies.txt<br>&nbsp;&nbsp;&nbsp;└─ playwright-storage-state.json</div>`
     })],
     'promo-small-440x280.png': [440, 280, `
       <body style="width:440px;height:280px;padding:34px 36px;display:flex;flex-direction:column;justify-content:space-between">

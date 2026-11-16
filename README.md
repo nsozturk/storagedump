@@ -33,7 +33,9 @@ StorageDump is a free, open-source Chrome extension that inspects and exports ev
 | Service Workers | Registrations, scopes and worker states |
 | Extension storage | `chrome.storage.local` / `sync` of StorageDump itself, kept separate |
 
-- **One-click export** — JSON or a ZIP with a manifest, per-category files and automatic splitting of large files.
+- **One-click export** — a ZIP, a single JSON file, or an unzipped folder (`Downloads/storagedump/<site>/`, replaced on every export so scripts always read the same path).
+- **Script-ready files** — every export adds `for-scripts/`: `cookie-header.txt`, Netscape `cookies.txt` (curl, wget, yt-dlp), `curl.txt` and `playwright-storage-state.json` (`browser.newContext({ storageState })`).
+- **Nothing fails silently** — `export-report.json` lists the entries written per category and every read that failed or came back short.
 - **Dashboard** — browse each category, drill into IndexedDB stores, edit or delete entries, review export history (with SHA-256 checksums).
 - **Optional masking** of keys that look like tokens, sessions or passwords.
 - **On demand only** — nothing is read until you click Scan. No server, no analytics; exports go to your Downloads folder.

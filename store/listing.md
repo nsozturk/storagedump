@@ -16,7 +16,8 @@ Open the site, click the StorageDump icon and press Scan. You get a summary of w
 What you can do
 - Review a site's data in a full-page dashboard, down to individual database records.
 - Edit or delete entries to test how a site behaves with different data.
-- Save an exact copy: values are written as stored, and large exports are split automatically.
+- Save an exact copy: values are written as stored, and a report lists anything that could not be read.
+- Hand the export to your own scripts: it includes a ready Cookie header, a cookies.txt file and a Playwright storage state.
 - Include cookies that page scripts cannot see, such as HttpOnly cookies.
 - Hide values that look like passwords or tokens before you share an export.
 - Keep a short history of your exports with a checksum for each file.
@@ -40,7 +41,7 @@ Developer Tools
 English
 
 ## Version
-0.2.2
+0.3.0
 
 ---
 

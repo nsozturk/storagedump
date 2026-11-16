@@ -14,6 +14,10 @@ Reading an export:
 - `local.json` / `session.json`: `[{ key, value, metadata: { origin } }]`; `value` is parsed JSON only when lossless, else the raw string.
 - `indexeddb.json`: `{ <db>: { version, stores: { <store>: { count, entries: [{ key, value }] } } } }`;
   tagged values `{ kind: 'Map' | 'Set' | 'BigInt' | 'Circular' | 'Blob' | ... }`.
+- `export-report.json`: `{ problemCount, categories: [{ id, status, exportedCount, problems, notes }] }` — check `problemCount` before trusting an export.
+- `for-scripts/`: `cookie-header.txt` (Cookie header for the site root), `cookies.txt` (Netscape format), `curl.txt`,
+  `playwright-storage-state.json` (pass to `browser.newContext({ storageState })`). With the "Folder" format the
+  same files are at the fixed path `~/Downloads/storagedump/<host>/`.
 - `cache.json`: `{ <cacheName>: [{ url, status, contentType, body, bodyEncoding: 'text' | 'base64' }] }`.
 
 Treat exported cookies and tokens as live credentials: never print, log or commit their values.

@@ -11,7 +11,8 @@ export type AccessState = 'readable' | 'partial' | 'restricted' | 'unavailable' 
 export type PermissionState = 'granted' | 'required' | 'denied' | 'restricted';
 export type MutationCapability = 'create' | 'update' | 'delete' | 'clear';
 export type PreviewMode = 'table' | 'json' | 'tree' | 'metadata';
-export type ExportFormat = 'json' | 'zip';
+// 'folder' writes the same files unzipped to Downloads/storagedump/<host>/, replacing the previous export.
+export type ExportFormat = 'json' | 'zip' | 'folder';
 export type ThemeMode = 'system' | 'dark' | 'light';
 
 export interface CategorySummary {
@@ -63,6 +64,24 @@ export interface ExportManifestCategory {
   warnings: string[];
 }
 
+/** What the page runtime returns for one exported category. */
+export interface CategoryExport {
+  payload: unknown;
+  /** Reads that failed or came back short. */
+  problems: string[];
+  /** Things left out on purpose (settings, browser limits). */
+  notes: string[];
+}
+
+export interface ExportReportCategory {
+  id: StorageCategoryId;
+  status: 'exported' | 'failed';
+  /** Entries actually written to the export. */
+  exportedCount: number;
+  problems: string[];
+  notes: string[];
+}
+
 export interface ExportManifest {
   app: 'StorageDump';
   version: string;
@@ -95,6 +114,7 @@ export interface AppSettings {
   splitThresholdBytes: number;
   skipBinaryBodies: boolean;
   maskSensitiveValues: boolean;
+  scriptFormats: boolean;
   autoScanOnOpen: boolean;
   retainExportHistory: boolean;
   theme: ThemeMode;
@@ -139,6 +159,8 @@ export interface ExportOptions {
   splitThresholdBytes: number;
   skipBinaryBodies: boolean;
   maskSensitiveValues: boolean;
+  /** Add for-scripts/ (Cookie header, cookies.txt, curl, Playwright storage state). Default on. */
+  scriptFormats?: boolean;
 }
 
 export interface ExportJobStatus {
@@ -149,6 +171,9 @@ export interface ExportJobStatus {
   manifest?: ExportManifest;
   historyEntry?: ExportHistoryEntry;
   error?: string;
+  startedAt?: number;
+  /** Problems written to export-report.json. */
+  problemCount?: number;
 }
 
 export interface ActiveContext {

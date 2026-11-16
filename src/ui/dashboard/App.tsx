@@ -3,10 +3,12 @@ import { startTransition, useEffect, useMemo, useState } from 'react';
 import { CATEGORY_LABELS, DEFAULT_SETTINGS } from '@/shared/constants';
 import type { CategoryDetail, ExportJobStatus, ExportManifest, ScanResult, StorageCategoryId } from '@/shared/types';
 import { formatBytes, formatNumber, formatRelativeTime } from '@/shared/utils/format';
+import { cookieHeader, type CookieRecord } from '@/shared/utils/scriptFormats';
 import { CategoryList } from '@/ui/components/CategoryList';
 import { DataTable } from '@/ui/components/DataTable';
 import { DebugPanel } from '@/ui/components/DebugPanel';
 import { MutationForm } from '@/ui/components/MutationForm';
+import { ReportLinks } from '@/ui/components/ReportLinks';
 import { StatusPill } from '@/ui/components/StatusPill';
 import { extensionApi } from '@/ui/lib/api';
 import { deriveAccessState, derivePermissionState, needsOriginPermission } from '@/ui/lib/scanState';
@@ -40,11 +42,10 @@ export function DashboardApp() {
 
     const interval = window.setInterval(() => {
       void extensionApi.getExportStatus(exportJob.id).then((latest) => {
-        if (latest) {
-          setExportJob(latest);
-          if (latest.state === 'completed') {
-            void extensionApi.getHistory().then((result) => setHistory(result.items));
-          }
+        // null: the service worker restarted and forgot the job
+        setExportJob(latest ?? { ...exportJob, state: 'failed', progress: 100, currentTask: 'Export interrupted', error: 'StorageDump restarted before the export finished. Start it again.' });
+        if (latest?.state === 'completed') {
+          void extensionApi.getHistory().then((result) => setHistory(result.items));
         }
       });
     }, 1000);
@@ -146,7 +147,8 @@ export function DashboardApp() {
           splitLargeFiles: settings.splitLargeFiles,
           splitThresholdBytes: settings.splitThresholdBytes,
           skipBinaryBodies: settings.skipBinaryBodies,
-          maskSensitiveValues: settings.maskSensitiveValues
+          maskSensitiveValues: settings.maskSensitiveValues,
+          scriptFormats: settings.scriptFormats
         }
       );
       setExportJob(job);
@@ -254,7 +256,12 @@ export function DashboardApp() {
           </aside>
 
           <section className="sd-content">
-            {error ? <div className="sd-banner" style={{ marginBottom: 16 }}>{error}</div> : null}
+            {error ? (
+              <div className="sd-banner" style={{ marginBottom: 16 }}>
+                <div>{error}</div>
+                <ReportLinks surface="dashboard" lastError={error} label="Report this error:" />
+              </div>
+            ) : null}
             {selectedView === 'overview' ? (
               <OverviewPanel
                 scan={scan}
@@ -366,6 +373,14 @@ function OverviewPanel({
             <div className="sd-summary-row"><span className="sd-subtle">State</span><span>{exportJob?.state ?? 'idle'}</span></div>
             <div className="sd-summary-row"><span className="sd-subtle">Task</span><span>{exportJob?.currentTask ?? 'Waiting'}</span></div>
             <div className="sd-summary-row"><span className="sd-subtle">Progress</span><span>{exportJob?.progress ?? 0}%</span></div>
+            {exportJob?.state === 'failed' && exportJob.error ? <div style={{ marginTop: 12, color: '#f87171' }}>{exportJob.error}</div> : null}
+            {exportJob?.state === 'completed' ? (
+              <div className="sd-subtle" style={{ marginTop: 12 }}>
+                {exportJob.problemCount
+                  ? `${exportJob.problemCount} problem(s) were recorded in export-report.json inside the export.`
+                  : 'Everything was read. Details are in export-report.json.'}
+              </div>
+            ) : null}
             {exportPreview ? <div className="sd-subtle" style={{ marginTop: 12 }}>Preview includes {exportPreview.categories.length} categories.</div> : null}
           </div>
 
@@ -430,6 +445,7 @@ function CategoryPanel({
           </div>
           <div className="sd-actions">
             <StatusPill value={detail.summary.accessState} />
+            {detail.id === 'cookies' && detail.entries.length > 0 ? <CopyCookieHeader detail={detail} /> : null}
             <button className="sd-button" onClick={onRefresh} disabled={busy}>Refresh</button>
             <button className="sd-button primary" onClick={onExport} disabled={busy}>Export only this</button>
           </div>
@@ -469,6 +485,27 @@ function CategoryPanel({
       {/* Keyed so a half-typed key from another category/store isn't carried over. */}
       <MutationForm key={`${detail.id}:${String(detail.metadata?.dbName ?? '')}:${String(detail.metadata?.storeName ?? '')}`} detail={detail} onSubmit={onMutate} disabled={busy} />
     </div>
+  );
+}
+
+// The Cookie header a script would send to the site's root, ready to paste.
+function CopyCookieHeader({ detail }: { detail: CategoryDetail }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      className="sd-button"
+      title="Copies name=value pairs for the site root. Treat it like a password."
+      onClick={() => {
+        const cookies = detail.entries.map((entry) => ({ ...(entry.metadata as Omit<CookieRecord, 'name' | 'value'>), name: entry.key, value: String(entry.value ?? '') }));
+        const domain = cookies.find((cookie) => cookie.hostOnly)?.domain ?? cookies[0].domain.replace(/^\./, '');
+        void navigator.clipboard.writeText(cookieHeader(cookies, `https://${domain}/`)).then(() => {
+          setCopied(true);
+          window.setTimeout(() => setCopied(false), 1500);
+        });
+      }}
+    >
+      {copied ? 'Copied' : 'Copy Cookie header'}
+    </button>
   );
 }
 
@@ -543,6 +580,7 @@ function SettingsPanel({
         <ToggleField label="Include metadata" checked={draft.includeMetadata} onChange={(checked) => setDraft({ ...draft, includeMetadata: checked })} />
         <ToggleField label="Split large files" checked={draft.splitLargeFiles} onChange={(checked) => setDraft({ ...draft, splitLargeFiles: checked })} />
         <ToggleField label="Skip binary bodies" checked={draft.skipBinaryBodies} onChange={(checked) => setDraft({ ...draft, skipBinaryBodies: checked })} />
+        <ToggleField label="Script-ready files (for-scripts/)" checked={draft.scriptFormats} onChange={(checked) => setDraft({ ...draft, scriptFormats: checked })} />
         <ToggleField label="Mask sensitive values" checked={draft.maskSensitiveValues} onChange={(checked) => setDraft({ ...draft, maskSensitiveValues: checked })} />
         <ToggleField label="Auto scan on popup open" checked={draft.autoScanOnOpen} onChange={(checked) => setDraft({ ...draft, autoScanOnOpen: checked })} />
         <ToggleField label="Retain export history" checked={draft.retainExportHistory} onChange={(checked) => setDraft({ ...draft, retainExportHistory: checked })} />
@@ -551,9 +589,10 @@ function SettingsPanel({
       <div className="sd-grid cols-2" style={{ marginTop: 16 }}>
         <label className="sd-field">
           <span>Default export format</span>
-          <select value={draft.defaultFormat} onChange={(event) => setDraft({ ...draft, defaultFormat: event.target.value as 'json' | 'zip' })}>
+          <select value={draft.defaultFormat} onChange={(event) => setDraft({ ...draft, defaultFormat: event.target.value as typeof draft.defaultFormat })}>
             <option value="zip">ZIP bundle</option>
-            <option value="json">JSON manifest</option>
+            <option value="json">Single JSON file</option>
+            <option value="folder">Folder (unzipped, replaces the last export)</option>
           </select>
         </label>
       </div>

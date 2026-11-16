@@ -15,14 +15,22 @@ import type {
 } from '@/shared/types';
 import { DEFAULT_SETTINGS } from '@/shared/constants';
 
+const MESSAGE_TIMEOUT_MS = 60_000;
+
 async function sendMessage<T extends MessageType>(
   type: T,
   payload: MessageMap[T]['request']
 ): Promise<MessageMap[T]['response']> {
-  const response = await chrome.runtime.sendMessage<MessageEnvelope<T>, MessageResponse<T>>({
-    type,
-    payload
-  });
+  // A busy or restarting service worker can leave sendMessage pending or answer with
+  // nothing; neither may leave the popup blank or stuck on "Scanning…".
+  const response = await Promise.race([
+    chrome.runtime.sendMessage<MessageEnvelope<T>, MessageResponse<T>>({ type, payload }),
+    new Promise<undefined>((resolve) => window.setTimeout(() => resolve(undefined), MESSAGE_TIMEOUT_MS))
+  ]);
+
+  if (!response) {
+    throw new Error('StorageDump did not answer in time. It may be restarting: try again.');
+  }
 
   if (!response.ok) {
     throw new Error(response.error);

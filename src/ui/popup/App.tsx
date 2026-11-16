@@ -4,6 +4,9 @@ import type { ExportJobStatus, ScanResult } from '@/shared/types';
 import { formatBytes, formatNumber } from '@/shared/utils/format';
 import { CategoryList } from '@/ui/components/CategoryList';
 import { DebugPanel } from '@/ui/components/DebugPanel';
+import { ExportProgress } from '@/ui/components/ExportProgress';
+import { ReportLinks } from '@/ui/components/ReportLinks';
+import { useWhatsNew, WhatsNewCard } from '@/ui/components/WhatsNew';
 import { StatusPill } from '@/ui/components/StatusPill';
 import { extensionApi } from '@/ui/lib/api';
 import { deriveAccessState, derivePermissionState, needsOriginPermission } from '@/ui/lib/scanState';
@@ -33,9 +36,8 @@ export function PopupApp() {
 
     const interval = window.setInterval(() => {
       void extensionApi.getExportStatus(exportJob.id).then((latest) => {
-        if (latest) {
-          setExportJob(latest);
-        }
+        // null: the service worker restarted and forgot the job
+        setExportJob(latest ?? { ...exportJob, state: 'failed', progress: 100, currentTask: 'Export interrupted', error: 'StorageDump restarted before the export finished. Start it again.' });
       });
     }, 900);
 
@@ -53,6 +55,9 @@ export function PopupApp() {
 
   const permissionState = derivePermissionState(scan);
   const accessState = deriveAccessState(scan);
+  const whatsNew = useWhatsNew();
+  // chrome://, the Web Store, PDFs…: nothing here can work, so say that instead of a wall of "restricted".
+  const restrictedPage = scan?.categories.find((category) => category.id === 'local')?.permissionState === 'restricted';
 
   async function requestOriginPermission() {
     const result = await extensionApi.requestOriginPermissionDirectly();
@@ -114,7 +119,8 @@ export function PopupApp() {
           splitLargeFiles: settings?.splitLargeFiles ?? true,
           splitThresholdBytes: settings?.splitThresholdBytes ?? 1024 * 1024 * 2,
           skipBinaryBodies: settings?.skipBinaryBodies ?? true,
-          maskSensitiveValues: settings?.maskSensitiveValues ?? false
+          maskSensitiveValues: settings?.maskSensitiveValues ?? false,
+          scriptFormats: settings?.scriptFormats ?? true
         }
       );
       setExportJob(job);
@@ -140,7 +146,19 @@ export function PopupApp() {
         </header>
 
         <main className="sd-main" style={{ flexDirection: 'column' }}>
-          <section className="sd-panel">
+          {whatsNew.open ? <WhatsNewCard onClose={whatsNew.close} /> : null}
+
+          {restrictedPage ? (
+            <div className="sd-notice">
+              <strong>StorageDump can't read this page</strong>
+              <span className="sd-subtle">
+                Browser pages (chrome://), the Chrome Web Store and built-in viewers are off limits to extensions. Open a
+                website (http or https) and click the icon again.
+              </span>
+            </div>
+          ) : null}
+
+          <section className="sd-panel" hidden={restrictedPage}>
             <div className="sd-grid cols-3">
               <div className="sd-metric">
                 <span className="sd-subtle">Categories</span>
@@ -165,39 +183,16 @@ export function PopupApp() {
             </div>
           ) : null}
 
-          {error ? <div className="sd-banner">{error}</div> : null}
-
-          {exportJob ? (
-            <section className="sd-panel tight">
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
-                <div>
-                  <strong>Export status</strong>
-                  <div className="sd-subtle">{exportJob.currentTask}</div>
-                  {exportJob.state === 'failed' && exportJob.error ? (
-                    <div className="sd-subtle" style={{ marginTop: 4, color: 'var(--sd-color-failed, #f87171)' }}>
-                      {exportJob.error}
-                    </div>
-                  ) : null}
-                </div>
-                {/* Own label: the access-state pill said "readable" for a finished export. */}
-                <span className={`sd-pill ${exportJob.state === 'completed' ? 'readable' : exportJob.state === 'failed' ? 'failed' : 'partial'}`}>
-                  {exportJob.state === 'completed' ? 'done' : exportJob.state}
-                </span>
-              </div>
-              <div style={{ marginTop: 12, height: 10, borderRadius: 999, background: 'rgba(148,163,184,0.12)' }}>
-                <div
-                  style={{
-                    height: '100%',
-                    width: `${exportJob.progress}%`,
-                    borderRadius: 999,
-                    background: 'linear-gradient(90deg, #2563eb, #38bdf8)'
-                  }}
-                />
-              </div>
-            </section>
+          {error ? (
+            <div className="sd-banner">
+              <div>{error}</div>
+              <ReportLinks surface="popup" lastError={error} label="Report this error:" />
+            </div>
           ) : null}
 
-          <section>
+          {exportJob ? <ExportProgress job={exportJob} /> : null}
+
+          <section hidden={restrictedPage}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <strong>Storage categories</strong>
               <div className="sd-actions">
@@ -231,7 +226,7 @@ export function PopupApp() {
             <button className="sd-button" onClick={() => void runScan()} disabled={busy}>
               {busy ? 'Scanning…' : 'Scan'}
             </button>
-            <button className="sd-button primary" onClick={() => void startExportAll()} disabled={!scan || busy}>
+            <button className="sd-button primary" onClick={() => void startExportAll()} disabled={!scan || busy || restrictedPage}>
               Export all
             </button>
           </div>
@@ -239,6 +234,13 @@ export function PopupApp() {
             Dashboard
           </button>
         </footer>
+        <div className="sd-popup-meta">
+          <span className="sd-subtle">v{chrome.runtime.getManifest().version}</span>
+          <button type="button" className="sd-link" onClick={whatsNew.show}>
+            What's new
+          </button>
+          <ReportLinks surface="popup" lastError={error} />
+        </div>
       </div>
     </div>
   );

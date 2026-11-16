@@ -470,6 +470,138 @@ try {
     await dashboard.waitForFunction((n) => document.querySelectorAll('.sd-table tbody tr').length === n - 1 || (n === 1 && document.querySelector('.sd-empty')), before);
   });
 
+  // ── Export contents (single-JSON format: the download item's data: URL holds every file) ──
+  await test('export: report, script-ready files and exact counts', dashboard, async () => {
+    if (HEADED) return;
+    const options = { format: 'json', prettyPrint: false, includeMetadata: false, includeTimestamps: true, splitLargeFiles: false, splitThresholdBytes: 2097152, skipBinaryBodies: true, maskSensitiveValues: false, scriptFormats: true };
+    const since = new Date().toISOString();
+    const job = await send(dashboard, 'START_EXPORT', { selection: { categoryIds: ['local', 'cookies', 'indexeddb', 'cache'] }, options });
+    let status = job;
+    const tasks = new Set();
+    for (let i = 0; i < 60 && status.state === 'running'; i++) {
+      await dashboard.waitForTimeout(100);
+      status = await send(dashboard, 'GET_EXPORT_STATUS', { jobId: job.id });
+      tasks.add(status.currentTask.split(' · ')[0]);
+    }
+    eq(status.state, 'completed', `job state (${status.error ?? ''})`);
+    eq(status.problemCount, 0, 'problems');
+    assert(typeof status.startedAt === 'number', 'startedAt missing');
+
+    // The download items carry the file content in their data: URL
+    const items = await worker.evaluate((startedAfter) => chrome.downloads.search({ startedAfter }), since);
+    eq(items.length, 1, 'download items');
+    const combined = JSON.parse(Buffer.from(items[0].url.split(',')[1], 'base64').toString('utf8'));
+    // Keys are file paths without extension, "/" → "_"
+    const files = {};
+    for (const [key, value] of Object.entries(combined)) files[key] = typeof value === 'string' ? value : JSON.stringify(value);
+    const names = Object.keys(files).sort();
+    for (const expected of ['manifest', 'export-report', 'cookies', 'local', 'indexeddb', 'cache', 'for-scripts_cookie-header', 'for-scripts_cookies', 'for-scripts_curl', 'for-scripts_playwright-storage-state']) {
+      assert(names.includes(expected), `missing ${expected}; got ${names.join(', ')}`);
+    }
+
+    const report = JSON.parse(files['export-report']);
+    const byId = Object.fromEntries(report.categories.map((c) => [c.id, c]));
+    eq(byId.local.exportedCount, 4, 'local exported');
+    eq(byId.cookies.exportedCount, 4, 'cookies exported');
+    eq(byId.indexeddb.exportedCount, JSON.stringify(JSON.parse(files['indexeddb'])).match(/"primaryKey"/g).length, 'indexeddb exported = records in file');
+    assert(byId.indexeddb.notes.some((n) => n.includes('1 binary values')), `binary note missing: ${JSON.stringify(byId.indexeddb.notes)}`);
+    assert(byId.cache.notes.some((n) => n.includes('non-text bodies were skipped')), `cache note missing: ${JSON.stringify(byId.cache.notes)}`);
+
+    const header = files['for-scripts_cookie-header'].trim();
+    assert(header.includes('fixtureHttpOnly=server') && header.includes('fixtureCookie=visible'), `cookie header: ${header}`);
+    assert(!header.includes('fixtureOtherPath'), 'cookie header must not include the Path=/api cookie for the site root');
+    const jar = files['for-scripts_cookies'];
+    assert(/^#HttpOnly_localhost\tFALSE\t\/\tFALSE\t0\tfixtureHttpOnly\tserver$/m.test(jar), `cookies.txt HttpOnly line missing:\n${jar}`);
+    assert(/\t\/api\t.*\tfixtureOtherPath\tapi$/m.test(jar), 'cookies.txt must list the Path=/api cookie');
+    assert(files['for-scripts_curl'].startsWith(`curl 'http://localhost:${port}/' -H 'Cookie: `), 'curl line');
+    const state = JSON.parse(files['for-scripts_playwright-storage-state']);
+    eq(state.cookies.length, 4, 'storage state cookies');
+    const origin = state.origins.find((o) => o.origin === `http://localhost:${port}`);
+    eq(origin.localStorage.find((e) => e.name === 'fixture:bignum').value, '7123456789012345678', 'storage state keeps raw strings');
+  });
+
+  await test('export: folder format saves every file separately', dashboard, async () => {
+    if (HEADED) return;
+    const since = new Date().toISOString();
+    const job = await send(dashboard, 'START_EXPORT', {
+      selection: { categoryIds: ['cookies', 'local'] },
+      options: { format: 'folder', prettyPrint: false, includeMetadata: false, includeTimestamps: true, splitLargeFiles: false, splitThresholdBytes: 2097152, skipBinaryBodies: true, maskSensitiveValues: false, scriptFormats: true }
+    });
+    let status = job;
+    for (let i = 0; i < 60 && status.state === 'running'; i++) {
+      await dashboard.waitForTimeout(100);
+      status = await send(dashboard, 'GET_EXPORT_STATUS', { jobId: job.id });
+    }
+    eq(status.state, 'completed', `job state (${status.error ?? ''})`);
+    // manifest, report, cookies, local + 4 script files
+    eq((await worker.evaluate((startedAfter) => chrome.downloads.search({ startedAfter }), since)).length, 8, 'files saved');
+    eq(status.historyEntry.fileName, `storagedump/localhost_${port}`, 'fixed folder name');
+  });
+
+  await test('page runtime: a stale bridge from an older version is replaced', dashboard, async () => {
+    // A tab that was open during an extension update: old bridge, old-style loading marker
+    const stale = await context.newPage();
+    await stale.goto(fixtureUrl.replace('index.html', 'cached.json'));
+    await stale.evaluate(() => {
+      window.__storageDumpBridge = { scan: async () => ({ categories: [] }) };
+      window.__storageDumpRuntimeLoading = Promise.resolve();
+    });
+    const staleId = await worker.evaluate(async (u) => (await chrome.tabs.query({ url: u }))[0].id, stale.url());
+    const second = await context.newPage();
+    await second.goto(`chrome-extension://${extensionId}/dashboard.html?sourceTabId=${staleId}`);
+    await second.locator('.sd-two-col .sd-category').first().waitFor();
+    eq(await second.locator('.sd-two-col .sd-category').count(), 7, 'health rows after replacing the bridge');
+    assert(typeof (await stale.evaluate(() => window.__storageDumpBridge.version)) === 'string', 'bridge was not replaced');
+    await second.close();
+    await stale.close();
+  });
+
+  await test('badge: cleared on in-page navigation', page, async () => {
+    assert((await worker.evaluate((id) => chrome.action.getBadgeText({ tabId: id }), tabId)) !== '', 'badge should be set after the scan');
+    await page.evaluate(() => history.pushState({}, '', '?view=2'));
+    await page.waitForTimeout(300);
+    eq(await worker.evaluate((id) => chrome.action.getBadgeText({ tabId: id }), tabId), '', 'badge after pushState');
+  });
+
+  await test('cookies: "Copy Cookie header" is offered', dashboard, async () => {
+    await nav(dashboard, 'Cookies');
+    await dashboard.getByRole('button', { name: 'Copy Cookie header' }).waitFor();
+  });
+
+  // ── Popup ──
+  await test('popup: what\'s new once, stepped export, report links', dashboard, async () => {
+    if (HEADED) return;
+    const popup = await context.newPage();
+    await popup.setViewportSize({ width: 400, height: 700 });
+    await popup.goto(`chrome-extension://${extensionId}/popup.html?sourceTabId=${tabId}`);
+    await popup.getByText("What's new in").waitFor();
+    await popup.getByRole('button', { name: "Close what's new" }).click();
+    await popup.reload();
+    await popup.getByText('Storage categories').waitFor();
+    eq(await popup.getByText("What's new in").count(), 0, "what's new after closing");
+    await popup.getByRole('button', { name: "What's new", exact: true }).click();
+    await popup.getByText("What's new in").waitFor();
+    eq(await popup.locator('.sd-popup-meta .sd-link', { hasText: 'GitHub' }).count(), 1, 'report link');
+    await popup.getByRole('button', { name: 'Export all' }).click();
+    await popup.locator('.sd-pill', { hasText: /^done$/ }).waitFor({ timeout: 20000 });
+    await popup.getByText('Everything was read').waitFor();
+    eq(await popup.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth), 0, 'popup horizontal overflow');
+    await popup.close();
+  });
+
+  await test('popup: restricted page shows one clear message', dashboard, async () => {
+    const blank = await context.newPage();
+    await blank.goto('about:blank');
+    const blankId = await worker.evaluate(async () => (await chrome.tabs.query({ url: 'about:blank' }))[0].id);
+    const popup = await context.newPage();
+    await popup.goto(`chrome-extension://${extensionId}/popup.html?sourceTabId=${blankId}`);
+    await popup.getByText("StorageDump can't read this page").waitFor();
+    assert(await popup.getByRole('button', { name: 'Export all' }).isDisabled(), 'Export all should be disabled');
+    eq(await popup.getByText('Storage categories').isVisible(), false, 'category list visible');
+    await popup.close();
+    await blank.close();
+  });
+
   // ── Settings ──
   await test('settings: only working options, saved value survives reload', dashboard, async () => {
     await nav(dashboard, 'Settings');

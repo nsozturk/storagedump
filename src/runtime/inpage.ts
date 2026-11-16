@@ -1,5 +1,6 @@
-import { CATEGORY_LABELS, DEFAULT_DETAIL_LIMIT } from '@/shared/constants';
+import { BRIDGE_VERSION, CATEGORY_LABELS, DEFAULT_DETAIL_LIMIT } from '@/shared/constants';
 import type {
+  CategoryExport,
   CategoryDetail,
   CategoryDetailTarget,
   CategoryEntry,
@@ -11,6 +12,8 @@ import type {
 import { estimateBytes, previewValue, safeJsonParse } from '@/shared/utils/serialization';
 
 interface StorageDumpBridge {
+  version: string;
+  exportCategoryDetailed: (categoryId: StorageCategoryId, target?: CategoryDetailTarget) => Promise<CategoryExport>;
   scan: () => Promise<ScanResult>;
   inspect: (categoryId: StorageCategoryId, target?: CategoryDetailTarget) => Promise<CategoryDetail>;
   exportCategory: (categoryId: StorageCategoryId, target?: CategoryDetailTarget) => Promise<unknown>;
@@ -121,6 +124,11 @@ function openDatabase(name: string, version?: number): Promise<IDBDatabase> {
   });
 }
 
+// Filled while a category is exported and returned by exportCategoryDetailed, so a
+// partial read ends up in export-report.json instead of looking like "no data".
+let exportProblems: string[] = [];
+let binaryValueCount = 0;
+
 function normalizeForTransport(value: unknown, seen = new WeakSet<object>()): unknown {
   if (typeof value === 'bigint') {
     return { kind: 'BigInt', value: value.toString() };
@@ -159,6 +167,7 @@ function normalizeObject(value: object, seen: WeakSet<object>): unknown {
   }
 
   if (value instanceof Blob) {
+    binaryValueCount += 1;
     return {
       kind: 'Blob',
       size: value.size,
@@ -167,6 +176,7 @@ function normalizeObject(value: object, seen: WeakSet<object>): unknown {
   }
 
   if (value instanceof ArrayBuffer) {
+    binaryValueCount += 1;
     return {
       kind: 'ArrayBuffer',
       byteLength: value.byteLength
@@ -174,6 +184,7 @@ function normalizeObject(value: object, seen: WeakSet<object>): unknown {
   }
 
   if (ArrayBuffer.isView(value)) {
+    binaryValueCount += 1;
     return {
       kind: value.constructor.name,
       byteLength: value.byteLength
@@ -402,21 +413,37 @@ async function exportIndexedDb(): Promise<unknown> {
   const databases = await listDatabases();
   const payload: Record<string, unknown> = {};
 
+  const reason = (error: unknown) => (error instanceof Error ? error.message : String(error));
+
+  // One unreadable database or store must not fail (or silently shorten) the rest.
   for (const databaseInfo of databases) {
-    const db = await openDatabase(databaseInfo.name, databaseInfo.version);
+    let db: IDBDatabase;
+    try {
+      db = await openDatabase(databaseInfo.name, databaseInfo.version);
+    } catch (error) {
+      exportProblems.push(`IndexedDB database "${databaseInfo.name}" could not be opened: ${reason(error)}`);
+      continue;
+    }
     try {
       const databasePayload: Record<string, unknown> = {};
       for (const storeName of Array.from(db.objectStoreNames)) {
-        const storeResult = await getStoreEntries(databaseInfo.name, storeName, 0, Number.MAX_SAFE_INTEGER);
-        databasePayload[storeName] = {
-          count: storeResult.count,
-          metadata: storeResult.metadata,
-          entries: storeResult.entries.map((entry) => ({
-            key: entry.key,
-            value: entry.value,
-            metadata: entry.metadata
-          }))
-        };
+        try {
+          const storeResult = await getStoreEntries(databaseInfo.name, storeName, 0, Number.MAX_SAFE_INTEGER);
+          if (storeResult.entries.length !== storeResult.count) {
+            exportProblems.push(`IndexedDB store "${databaseInfo.name}.${storeName}": read ${storeResult.entries.length} of ${storeResult.count} records`);
+          }
+          databasePayload[storeName] = {
+            count: storeResult.count,
+            metadata: storeResult.metadata,
+            entries: storeResult.entries.map((entry) => ({
+              key: entry.key,
+              value: entry.value,
+              metadata: entry.metadata
+            }))
+          };
+        } catch (error) {
+          exportProblems.push(`IndexedDB store "${databaseInfo.name}.${storeName}" could not be read: ${reason(error)}`);
+        }
       }
       payload[databaseInfo.name] = {
         version: databaseInfo.version,
@@ -594,6 +621,8 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
   return btoa(binary);
 }
 
+let bodiesWithoutContent = 0;
+
 async function exportCacheStorage(includeBinaryBodies = false): Promise<unknown> {
   const cacheNames = await caches.keys();
   const payload: Record<string, unknown> = {};
@@ -608,12 +637,21 @@ async function exportCacheStorage(includeBinaryBodies = false): Promise<unknown>
         let body: string | null = null;
         let bodyEncoding: 'text' | 'base64' | undefined;
 
-        if (response && isTextualContentType(contentType)) {
-          body = await response.clone().text();
-          bodyEncoding = 'text';
-        } else if (response && includeBinaryBodies && response.type !== 'opaque') {
-          body = arrayBufferToBase64(await response.clone().arrayBuffer());
-          bodyEncoding = 'base64';
+        try {
+          if (response && isTextualContentType(contentType)) {
+            body = await response.clone().text();
+            bodyEncoding = 'text';
+          } else if (response && includeBinaryBodies && response.type !== 'opaque') {
+            body = arrayBufferToBase64(await response.clone().arrayBuffer());
+            bodyEncoding = 'base64';
+          }
+        } catch (error) {
+          exportProblems.push(`Cache body of ${request.url} could not be read: ${error instanceof Error ? error.message : String(error)}`);
+        }
+        if (!response) {
+          exportProblems.push(`Cache entry ${request.url} disappeared while exporting`);
+        } else if (body === null) {
+          bodiesWithoutContent += 1;
         }
 
         return {
@@ -774,7 +812,29 @@ async function mutate(categoryId: StorageCategoryId, action: MutationAction): Pr
   }
 }
 
+// Same payload as exportCategory plus what went wrong and what was left out on purpose.
+async function exportCategoryDetailed(categoryId: StorageCategoryId, target?: CategoryDetailTarget): Promise<CategoryExport> {
+  exportProblems = [];
+  binaryValueCount = 0;
+  bodiesWithoutContent = 0;
+  const payload = await exportCategory(categoryId, target);
+  const notes: string[] = [];
+  if (categoryId === 'indexeddb' && binaryValueCount > 0) {
+    notes.push(`${binaryValueCount} binary values (Blob, ArrayBuffer, typed arrays) are exported as type and size only.`);
+  }
+  if (categoryId === 'cache' && bodiesWithoutContent > 0) {
+    notes.push(
+      target?.includeBinaryBodies
+        ? `${bodiesWithoutContent} opaque responses have no readable body.`
+        : `${bodiesWithoutContent} non-text bodies were skipped ("Skip binary bodies" is on).`
+    );
+  }
+  return { payload, problems: exportProblems, notes };
+}
+
 window.__storageDumpBridge = {
+  version: BRIDGE_VERSION,
+  exportCategoryDetailed,
   scan,
   inspect,
   exportCategory,

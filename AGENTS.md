@@ -13,7 +13,7 @@ cookies, localStorage, sessionStorage, IndexedDB, Cache Storage and service work
 | `npm run typecheck` | `tsc --noEmit` | non-zero on type errors |
 | `npm test` | Vitest unit tests | non-zero on failure |
 | `npm run build` | Typecheck + Vite build to `dist/` | non-zero on failure |
-| `npm run test:e2e` | Build, then 29-case Playwright dashboard test incl. layout-stability checks | 1 if any case fails, 2 if `dist/` is missing |
+| `npm run test:e2e` | Build, then 42-case Playwright dashboard test incl. layout-stability checks | 1 if any case fails, 2 if `dist/` is missing |
 | `npm run pack` | Production build + `storagedump.zip` for the Chrome Web Store | non-zero on failure |
 
 `npm run test:e2e` needs `npx playwright install chromium` once. Failure screenshots land in
@@ -33,6 +33,13 @@ cookies, localStorage, sessionStorage, IndexedDB, Cache Storage and service work
 - IndexedDB values go through `normalizeForTransport`: Map/Set/BigInt are tagged with `kind`, cycles become `{ kind: 'Circular' }`.
   IndexedDB deletes must use the real `primaryKey`, never its string form.
 - Cookies: list every cookie for the host (any Path), host-only cookies exact-match only, plus partitioned cookies.
+- A failed or short read goes into `export-report.json` (`problems`); it is never turned into an empty category.
+  `notes` hold what was left out on purpose (binary bodies, binary IndexedDB values).
+- `BRIDGE_VERSION` (src/shared/constants.ts) must be bumped whenever `src/runtime/inpage.ts` changes behaviour:
+  tabs open during an update keep the old bridge until the version differs. Inside functions passed to
+  `chrome.scripting.executeScript`, keep dynamic imports as a bare `import(variable)`; the bundler rewrites
+  anything else into a helper that does not exist in the page.
+- `cookies.json` and the other category files are a contract for users' scripts: add files, never change shapes.
 - Never read pages in the background. The badge is set only after a user-started scan (store listing promise).
 - Any dashboard/UI change: run `npm run test:e2e`; the layout cases fail on CLS > 0.05 or shell movement > 1 px.
 

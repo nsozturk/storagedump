@@ -2,6 +2,7 @@ import JSZip from 'jszip';
 
 import {
   APP_NAME,
+  BRIDGE_VERSION,
   CATEGORY_LABELS,
   DEFAULT_SETTINGS,
   HISTORY_STORAGE_KEY,
@@ -13,6 +14,8 @@ import type {
   ActiveContext,
   AppSettings,
   CategoryDetail,
+  CategoryExport,
+  ExportReportCategory,
   CategoryDetailTarget,
   CategoryEntry,
   CategorySummary,
@@ -30,6 +33,14 @@ import type {
 import { sha256 } from '@/shared/utils/crypto';
 import { formatBytes } from '@/shared/utils/format';
 import { makeId } from '@/shared/utils/id';
+import {
+  cookieHeader,
+  curlCommand,
+  netscapeCookies,
+  playwrightStorageState,
+  type CookieRecord,
+  type OriginStorage
+} from '@/shared/utils/scriptFormats';
 import { estimateBytes, maskMaybeSensitiveValue, previewValue, safeJsonParse, stableStringify } from '@/shared/utils/serialization';
 
 type Handler<T extends MessageType> = (
@@ -236,7 +247,7 @@ function cookieMatchesHostname(cookie: chrome.cookies.Cookie, hostname: string):
   );
 }
 
-async function getCookiesForContext(context: ActiveContext): Promise<chrome.cookies.Cookie[]> {
+async function getCookiesForContext(context: ActiveContext, problems: string[] = []): Promise<chrome.cookies.Cookie[]> {
   const store = await getCookieStoreForTab(context.tabId);
   const storeId = store?.id;
   const origin = new URL(context.url).origin;
@@ -256,7 +267,10 @@ async function getCookiesForContext(context: ActiveContext): Promise<chrome.cook
   // Fetch partitioned cookies (CHIPS, Chrome 119+). Falls back to [] on older builds.
   const partitioned = await Promise.resolve()
     .then(() => chrome.cookies.getAll({ ...base, partitionKey: { topLevelSite: origin } }))
-    .catch((): chrome.cookies.Cookie[] => []);
+    .catch((error): chrome.cookies.Cookie[] => {
+      problems.push(`Partitioned cookies could not be read: ${error instanceof Error ? error.message : String(error)}`);
+      return [];
+    });
 
   // Merge, skipping duplicates that appear in both sets.
   const seen = new Set(unpartitioned.map(cookieIdentity));
@@ -281,28 +295,33 @@ async function requestActiveOriginPermission(sender?: chrome.runtime.MessageSend
 }
 
 async function ensurePageRuntime(tabId: number): Promise<void> {
-  const bundleUrl = chrome.runtime.getURL('assets/inpage.js');
+  // The version in the query string gets a changed runtime past the page's module cache.
+  const bundleUrl = `${chrome.runtime.getURL('assets/inpage.js')}?v=${BRIDGE_VERSION}`;
   const [result] = await chrome.scripting.executeScript({
     target: { tabId },
     world: 'MAIN',
-    func: async (runtimeUrl: string) => {
+    func: async (runtimeUrl: string, expectedVersion: string) => {
       const bridgeHost = window as Window & {
-        __storageDumpBridge?: unknown;
-        __storageDumpRuntimeLoading?: Promise<unknown>;
+        __storageDumpBridge?: { version?: string };
+        __storageDumpRuntimeLoading?: { version: string; promise: Promise<unknown> };
       };
 
-      if (bridgeHost.__storageDumpBridge) {
+      if (bridgeHost.__storageDumpBridge?.version === expectedVersion) {
         return true;
       }
 
-      if (!bridgeHost.__storageDumpRuntimeLoading) {
-        bridgeHost.__storageDumpRuntimeLoading = import(runtimeUrl);
+      // A tab that stayed open across an extension update still holds the old
+      // bridge (and its old bugs): load the current one.
+      if (bridgeHost.__storageDumpRuntimeLoading?.version !== expectedVersion) {
+        // Keep this a bare import(variable): the bundler rewrites any other form into a
+        // helper that does not exist inside the injected function.
+        bridgeHost.__storageDumpRuntimeLoading = { version: expectedVersion, promise: import(runtimeUrl) };
       }
 
-      await bridgeHost.__storageDumpRuntimeLoading;
-      return Boolean(bridgeHost.__storageDumpBridge);
+      await bridgeHost.__storageDumpRuntimeLoading.promise;
+      return bridgeHost.__storageDumpBridge?.version === expectedVersion;
     },
-    args: [bundleUrl]
+    args: [bundleUrl, BRIDGE_VERSION]
   });
 
   if (!result?.result) {
@@ -463,7 +482,7 @@ async function scanCookies(context: ActiveContext): Promise<CategorySummary> {
   });
 }
 
-async function inspectCookies(context: ActiveContext): Promise<CategoryDetail> {
+async function inspectCookies(context: ActiveContext, problems: string[] = []): Promise<CategoryDetail> {
   const summary = await scanCookies(context);
   if (summary.permissionState !== 'granted') {
     return {
@@ -475,7 +494,7 @@ async function inspectCookies(context: ActiveContext): Promise<CategoryDetail> {
     };
   }
 
-  const cookies = await getCookiesForContext(context);
+  const cookies = await getCookiesForContext(context, problems);
   return {
     id: 'cookies',
     summary,
@@ -492,6 +511,7 @@ async function inspectCookies(context: ActiveContext): Promise<CategoryDetail> {
         sameSite: cookie.sameSite,
         secure: cookie.secure,
         httpOnly: cookie.httpOnly,
+        hostOnly: cookie.hostOnly,
         session: cookie.session,
         expirationDate: cookie.expirationDate
       }
@@ -628,23 +648,26 @@ async function mutateExtensionStorage(action: MutationAction): Promise<CategoryD
 // ─── All-frames localStorage / sessionStorage ────────────────────────────────
 
 type FrameStorageEntry = { key: string; value: string };
-type FrameStorageResult = { origin: string; entries: FrameStorageEntry[] };
+type FrameStorageResult = { origin: string; entries: FrameStorageEntry[]; error?: string };
 
-async function collectAllFramesStorage(tabId: number, kind: 'local' | 'session'): Promise<FrameStorageResult[]> {
+// `problems` collects reads that failed, for export-report.json.
+async function collectAllFramesStorage(tabId: number, kind: 'local' | 'session', problems: string[] = []): Promise<FrameStorageResult[]> {
   const readFrameStorage = (storageKind: string): FrameStorageResult => {
     const entries: Array<{ key: string; value: string }> = [];
+    let error: string | undefined;
     try {
       const storage = storageKind === 'local' ? localStorage : sessionStorage;
       for (let i = 0; i < storage.length; i++) {
         const key = storage.key(i) ?? `item-${i}`;
         entries.push({ key, value: storage.getItem(key) ?? '' });
       }
-    } catch {
+    } catch (caught) {
       // Sandboxed/opaque frames throw on storage access; don't fail the other frames.
+      error = caught instanceof Error ? caught.message : String(caught);
     }
     // self.origin, not location.origin: about:blank frames report "null" from
     // location but share their parent's storage, which duplicated every entry.
-    return { origin: self.origin, entries };
+    return { origin: self.origin, entries, error };
   };
 
   let rawResults: Array<chrome.scripting.InjectionResult<FrameStorageResult>>;
@@ -655,8 +678,11 @@ async function collectAllFramesStorage(tabId: number, kind: 'local' | 'session')
       func: readFrameStorage,
       args: [kind]
     });
-  } catch {
+  } catch (allFramesError) {
     // allFrames failed — fall back to main frame only.
+    problems.push(
+      `Only the top frame's ${kind} storage was read; embedded frames could not be reached (${allFramesError instanceof Error ? allFramesError.message : 'injection failed'}).`
+    );
     try {
       rawResults = await chrome.scripting.executeScript({
         target: { tabId },
@@ -676,7 +702,11 @@ async function collectAllFramesStorage(tabId: number, kind: 'local' | 'session')
 
   for (const r of rawResults) {
     if (!r.result) continue;
-    const { origin, entries } = r.result;
+    const { origin, entries, error } = r.result;
+    // An opaque origin ("null") has no storage at all, so its refusal is not a loss.
+    if (error && origin !== 'null') {
+      problems.push(`${kind} storage of frame ${origin} could not be read: ${error}`);
+    }
     if (!originMap.has(origin)) {
       const arr: FrameStorageEntry[] = [];
       originMap.set(origin, arr);
@@ -864,55 +894,99 @@ async function runCategoryMutation(
   }
 }
 
+// What a category export produced, plus the raw material for the script-ready files.
+type CategoryExportResult = CategoryExport & { cookies?: CookieRecord[]; origins?: OriginStorage[] };
+
 async function exportCategoryPayload(
   context: ActiveContext,
   categoryId: StorageCategoryId,
   target: CategoryDetailTarget | undefined,
   options: ExportOptions
-): Promise<unknown> {
+): Promise<CategoryExportResult> {
+  const problems: string[] = [];
+  const notes: string[] = [];
   switch (categoryId) {
     case 'cookies': {
-      const detail = await inspectCookies(context);
-      return detail.entries.map((entry) => ({
-        key: entry.key,
-        value: maskMaybeSensitiveValue(entry.key, entry.value, options.maskSensitiveValues),
-        metadata: entry.metadata
-      }));
+      const detail = await inspectCookies(context, problems);
+      if (detail.summary.permissionState !== 'granted') {
+        problems.push('Cookies were not read: origin permission is missing.');
+      }
+      return {
+        payload: detail.entries.map((entry) => ({
+          key: entry.key,
+          value: maskMaybeSensitiveValue(entry.key, entry.value, options.maskSensitiveValues),
+          metadata: entry.metadata
+        })),
+        problems,
+        notes,
+        cookies: detail.entries.map((entry) => ({ ...(entry.metadata as Omit<CookieRecord, 'name' | 'value'>), name: entry.key, value: String(entry.value ?? '') }))
+      };
     }
     case 'extension': {
       const detail = await inspectExtensionStorage(target);
-      return detail.entries.map((entry) => ({
-        key: entry.key,
-        value: maskMaybeSensitiveValue(entry.key, entry.value, options.maskSensitiveValues),
-        metadata: entry.metadata
-      }));
+      return {
+        payload: detail.entries.map((entry) => ({
+          key: entry.key,
+          value: maskMaybeSensitiveValue(entry.key, entry.value, options.maskSensitiveValues),
+          metadata: entry.metadata
+        })),
+        problems,
+        notes
+      };
     }
     case 'local':
     case 'session': {
       if (!isScriptableUrl(context.url)) {
         throw new Error('This tab URL cannot be scripted.');
       }
-      const frames = await collectAllFramesStorage(context.tabId, categoryId);
+      const frames = await collectAllFramesStorage(context.tabId, categoryId, problems);
       const detail = buildAllFramesStorageDetail(categoryId, frames);
-      return detail.entries.map((entry) => ({
-        key: entry.key,
-        value: maskMaybeSensitiveValue(entry.key, entry.value, options.maskSensitiveValues),
-        metadata: entry.metadata
-      }));
+      return {
+        payload: detail.entries.map((entry) => ({
+          key: entry.key,
+          value: maskMaybeSensitiveValue(entry.key, entry.value, options.maskSensitiveValues),
+          metadata: entry.metadata
+        })),
+        problems,
+        notes,
+        origins: categoryId === 'local' ? frames : undefined
+      };
     }
     default:
       if (!isScriptableUrl(context.url)) {
         throw new Error('This tab URL cannot be scripted.');
       }
-      return callPageBridge<unknown>(context.tabId, 'exportCategory', categoryId, {
+      return callPageBridge<CategoryExport>(context.tabId, 'exportCategoryDetailed', categoryId, {
         ...target,
         includeBinaryBodies: !options.skipBinaryBodies
       });
   }
 }
 
+// Entries actually written for a category (the scan count can differ by the time of export).
+function countExported(categoryId: StorageCategoryId, payload: unknown): number {
+  if (Array.isArray(payload)) {
+    return payload.length;
+  }
+  if (!payload || typeof payload !== 'object') {
+    return 0;
+  }
+  const groups = Object.values(payload as Record<string, unknown>);
+  if (categoryId === 'indexeddb') {
+    return groups.reduce<number>(
+      (sum, db) => sum + Object.values((db as { stores: Record<string, { entries: unknown[] }> }).stores).reduce((n, store) => n + store.entries.length, 0),
+      0
+    );
+  }
+  return groups.reduce<number>((sum, group) => sum + (Array.isArray(group) ? group.length : 0), 0);
+}
+
 function exportFileName(origin: string, format: ExportOptions['format']): string {
   const sanitizedOrigin = origin.replace(/^https?:\/\//, '').replace(/[^a-z0-9.-]+/gi, '_');
+  if (format === 'folder') {
+    // Fixed path, no timestamp: scripts read the same place after every export.
+    return `storagedump/${sanitizedOrigin}`;
+  }
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   return `storagedump_${sanitizedOrigin}_${timestamp}.${format === 'zip' ? 'zip' : 'json'}`;
 }
@@ -945,11 +1019,13 @@ async function buildExportPayload(
   context: ActiveContext,
   scanResult: ScanResult,
   selection: ExportSelection,
-  options: ExportOptions
+  options: ExportOptions,
+  onProgress: (done: number, total: number, label: string) => void = () => {}
 ): Promise<{
   manifest: ExportManifest;
   files: Array<{ path: string; content: string }>;
   totalSizeBytes: number;
+  problemCount: number;
 }> {
   const categorySummaries = scanResult.categories.filter((category) => selection.categoryIds.includes(category.id));
   const manifest: ExportManifest = {
@@ -962,11 +1038,18 @@ async function buildExportPayload(
     partial: false
   };
   const files: Array<{ path: string; content: string }> = [];
+  const report: ExportReportCategory[] = [];
   let totalSizeBytes = 0;
+  let cookies: CookieRecord[] | undefined;
+  let origins: OriginStorage[] = [];
 
-  for (const category of categorySummaries) {
+  for (const [index, category] of categorySummaries.entries()) {
+    onProgress(index, categorySummaries.length, category.label);
     try {
-      const payload = await exportCategoryPayload(context, category.id, selection.detailTargets?.[category.id], options);
+      const result = await exportCategoryPayload(context, category.id, selection.detailTargets?.[category.id], options);
+      const payload = result.payload;
+      cookies = result.cookies ?? cookies;
+      origins = result.origins ?? origins;
       const normalizedPayload = options.maskSensitiveValues ? maskPayload(category.id, payload) : payload;
       const wrappedPayload = options.includeMetadata
         ? {
@@ -984,10 +1067,10 @@ async function buildExportPayload(
       totalSizeBytes += estimateBytes(serialized);
 
       if (options.splitLargeFiles && Array.isArray(normalizedPayload) && estimateBytes(serialized) > options.splitThresholdBytes) {
-        splitArrayPayload(normalizedPayload, options.splitThresholdBytes).forEach((chunk, index) => {
+        splitArrayPayload(normalizedPayload, options.splitThresholdBytes).forEach((chunk, chunkIndex) => {
           const chunkContent = stableStringify(chunk, options.prettyPrint ? 2 : 0);
           files.push({
-            path: `${category.id}/part-${index + 1}.json`,
+            path: `${category.id}/part-${chunkIndex + 1}.json`,
             content: chunkContent
           });
         });
@@ -998,27 +1081,67 @@ async function buildExportPayload(
         });
       }
 
+      const exportedCount = countExported(category.id, payload);
+      report.push({ id: category.id, status: 'exported', exportedCount, problems: result.problems, notes: result.notes });
+      if (result.problems.length > 0) {
+        manifest.partial = true;
+      }
       manifest.categories.push({
         id: category.id,
         status: 'exported',
-        itemCount: category.itemCount,
+        itemCount: exportedCount,
         estimatedSizeBytes: category.estimatedSizeBytes,
-        warnings: category.warnings
+        warnings: [...category.warnings, ...result.problems]
       });
     } catch (error) {
+      const message = error instanceof Error ? error.message : `Failed to export ${CATEGORY_LABELS[category.id]}.`;
       manifest.partial = true;
+      report.push({ id: category.id, status: 'failed', exportedCount: 0, problems: [message], notes: [] });
       manifest.categories.push({
         id: category.id,
         status: 'failed',
         itemCount: category.itemCount,
         estimatedSizeBytes: category.estimatedSizeBytes,
-        warnings: [
-          ...category.warnings,
-          error instanceof Error ? error.message : `Failed to export ${CATEGORY_LABELS[category.id]}.`
-        ]
+        warnings: [...category.warnings, message]
       });
     }
   }
+  onProgress(categorySummaries.length, categorySummaries.length, '');
+
+  // for-scripts/: the formats scripts otherwise rebuild from cookies.json by hand
+  const scriptNotes: string[] = [];
+  if (options.scriptFormats !== false && cookies && isScriptableUrl(context.url)) {
+    if (options.maskSensitiveValues) {
+      scriptNotes.push('for-scripts/ was not written because "Mask sensitive values" is on.');
+    } else {
+      const pageUrl = `${new URL(context.url).origin}/`;
+      files.push(
+        { path: 'for-scripts/cookie-header.txt', content: `${cookieHeader(cookies, pageUrl)}\n` },
+        { path: 'for-scripts/cookies.txt', content: netscapeCookies(cookies) },
+        { path: 'for-scripts/curl.txt', content: `${curlCommand(cookies, pageUrl)}\n` },
+        { path: 'for-scripts/playwright-storage-state.json', content: JSON.stringify(playwrightStorageState(cookies, origins), null, 2) }
+      );
+    }
+  }
+
+  // export-report.json: what was written and every problem met on the way.
+  // A failed read is listed here; it is never turned into an empty category.
+  const problemCount = report.reduce((sum, entry) => sum + entry.problems.length, 0);
+  files.unshift({
+    path: 'export-report.json',
+    content: JSON.stringify(
+      {
+        exportedAt: manifest.exportedAt,
+        extensionVersion: manifest.version,
+        origin: context.origin,
+        problemCount,
+        categories: report,
+        notes: scriptNotes
+      },
+      null,
+      2
+    )
+  });
 
   files.unshift({
     path: 'manifest.json',
@@ -1028,7 +1151,8 @@ async function buildExportPayload(
   return {
     manifest,
     files,
-    totalSizeBytes
+    totalSizeBytes,
+    problemCount
   };
 }
 
@@ -1068,13 +1192,27 @@ async function createDownload(
 ): Promise<void> {
   // URL.createObjectURL is not available in MV3 service workers.
   // Use base64 data URLs instead, which are supported by chrome.downloads.download.
+  if (format === 'folder') {
+    // Unzipped, to a fixed place, replacing the previous export of this site.
+    for (const file of files) {
+      const type = file.path.endsWith('.json') ? 'application/json' : 'text/plain';
+      await chrome.downloads.download({
+        url: `data:${type};base64,${contentToBase64(file.content)}`,
+        filename: `${fileName}/${file.path}`,
+        conflictAction: 'overwrite',
+        saveAs: false
+      });
+    }
+    return;
+  }
+
   let url: string;
 
   if (format === 'json') {
     // Combine all exported files into a single JSON object keyed by category id.
     const combined: Record<string, unknown> = {};
     for (const file of files) {
-      const key = file.path.replace(/\.json$/, '').replace(/\//g, '_');
+      const key = file.path.replace(/\.(json|txt)$/, '').replace(/\//g, '_');
       try {
         combined[key] = JSON.parse(file.content) as unknown;
       } catch {
@@ -1105,24 +1243,19 @@ async function runExportJob(
   selection: ExportSelection,
   options: ExportOptions
 ): Promise<void> {
-  exportJobs.set(jobId, {
-    id: jobId,
-    state: 'running',
-    progress: 15,
-    currentTask: 'Building export manifest'
-  });
+  const startedAt = exportJobs.get(jobId)?.startedAt ?? Date.now();
+  // Numbered steps: a new phase starting at "0" otherwise reads as a restart.
+  const step = (progress: number, currentTask: string, extra: Partial<ExportJobStatus> = {}) =>
+    exportJobs.set(jobId, { id: jobId, state: 'running', startedAt, progress, currentTask, ...extra });
 
-  const payload = await buildExportPayload(context, scanResult, selection, options);
+  const payload = await buildExportPayload(context, scanResult, selection, options, (done, total, label) =>
+    step(5 + Math.round((done / Math.max(total, 1)) * 60), label ? `Step 1/3 · Reading ${label} (${done + 1}/${total})` : 'Step 1/3 · Reading finished')
+  );
   const fileName = exportFileName(context.origin, options.format);
-  exportJobs.set(jobId, {
-    id: jobId,
-    state: 'running',
-    progress: 70,
-    currentTask: `Packaging ${payload.files.length} files (${formatBytes(payload.totalSizeBytes)})`,
-    manifest: payload.manifest
-  });
+  step(70, `Step 2/3 · Packaging ${payload.files.length} files (${formatBytes(payload.totalSizeBytes)})`, { manifest: payload.manifest });
 
   await createDownload(fileName, options.format, payload.files);
+  step(92, 'Step 3/3 · Saving', { manifest: payload.manifest });
 
   const checksumSource = stableStringify({
     manifest: payload.manifest,
@@ -1136,7 +1269,7 @@ async function runExportJob(
     createdAt: new Date().toISOString(),
     categoryCount: payload.manifest.categories.length,
     totalSizeBytes: payload.totalSizeBytes,
-    warningCount: payload.manifest.categories.reduce((sum, category) => sum + category.warnings.length, 0),
+    warningCount: payload.problemCount,
     partial: payload.manifest.partial,
     checksum: await sha256(checksumSource)
   };
@@ -1152,6 +1285,8 @@ async function runExportJob(
     state: 'completed',
     progress: 100,
     currentTask: 'Export completed',
+    startedAt,
+    problemCount: payload.problemCount,
     manifest: payload.manifest,
     historyEntry
   });
@@ -1169,6 +1304,7 @@ async function startExport(
   const job: ExportJobStatus = {
     id: jobId,
     state: 'running',
+    startedAt: Date.now(),
     progress: 5,
     currentTask: 'Preparing export'
   };
@@ -1179,6 +1315,7 @@ async function startExport(
     exportJobs.set(jobId, {
       id: jobId,
       state: 'failed',
+      startedAt: job.startedAt,
       progress: 100,
       currentTask: 'Export failed',
       error: error instanceof Error ? error.message : 'Export failed.'
@@ -1232,7 +1369,8 @@ function setBadge(tabId: number, count: number): void {
 
 // A count from the previous page is stale once the tab navigates.
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
-  if (changeInfo.status === 'loading') {
+  // `url` also fires for in-page (history API) navigation, where status never changes.
+  if (changeInfo.status === 'loading' || changeInfo.url) {
     void chrome.action.setBadgeText({ tabId, text: '' }).catch(() => {});
   }
 });

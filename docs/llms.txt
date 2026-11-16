@@ -2,7 +2,7 @@
 
 > StorageDump is a free, open-source Chrome extension that inspects and exports everything a website stores in your browser — cookies (including HttpOnly and partitioned), localStorage, sessionStorage, IndexedDB, Cache Storage and service workers — as lossless JSON or ZIP, entirely on your machine.
 
-Version 0.2.2, MIT license. On-demand only: no server, no analytics, no background reads. Exports are saved to the Downloads folder.
+Version 0.3.0, MIT license. On-demand only: no server, no analytics, no background reads. Exports are saved to the Downloads folder.
 
 ## What it does
 

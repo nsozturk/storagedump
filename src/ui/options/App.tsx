@@ -37,9 +37,10 @@ export function OptionsApp() {
             <div className="sd-grid cols-2">
               <label className="sd-field">
                 <span>Default export format</span>
-                <select value={settings.defaultFormat} onChange={(event) => setSettings({ ...settings, defaultFormat: event.target.value as 'json' | 'zip' })}>
+                <select value={settings.defaultFormat} onChange={(event) => setSettings({ ...settings, defaultFormat: event.target.value as typeof settings.defaultFormat })}>
                   <option value="zip">ZIP bundle</option>
-                  <option value="json">JSON manifest</option>
+                  <option value="json">Single JSON file</option>
+                  <option value="folder">Folder (unzipped, replaces the last export)</option>
                 </select>
               </label>
             </div>
@@ -51,6 +52,7 @@ export function OptionsApp() {
                   ['includeMetadata', 'Include metadata'],
                   ['splitLargeFiles', 'Split large files'],
                   ['skipBinaryBodies', 'Skip binary bodies'],
+                  ['scriptFormats', 'Script-ready files (for-scripts/)'],
                   ['maskSensitiveValues', 'Mask sensitive values'],
                   ['autoScanOnOpen', 'Auto scan on popup open'],
                   ['retainExportHistory', 'Retain export history']

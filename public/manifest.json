@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "StorageDump",
   "description": "Inspect and export cookies, localStorage, sessionStorage, IndexedDB and Cache API for any site you visit.",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "minimum_chrome_version": "120",
   "action": {
     "default_title": "StorageDump",
